@@ -1,0 +1,27 @@
+﻿<Window x:Class="ProtoUntyped.Viewer.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ProtoUntyped.Viewer"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800"
+        d:DataContext="{d:DesignInstance Type={x:Type local:MainViewModel}}">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <DataGrid ItemsSource="{Binding Messages}" AutoGenerateColumns="False" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" SelectedItem="{Binding SelectedMessage}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Message" Binding="{Binding TypeName}"></DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <TextBox IsReadOnly="true" Grid.Row="0" Grid.Column="1" Text="{Binding SelectedMessage.JsonText}">
+        </TextBox>
+    </Grid>
+</Window>
