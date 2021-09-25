@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProtoUntyped.Viewer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="MainWindow" Height="1000" Width="1000"
         d:DataContext="{d:DesignInstance Type={x:Type local:MainViewModel}}">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -18,10 +18,10 @@
         </Grid.RowDefinitions>
         <DataGrid ItemsSource="{Binding Messages}" AutoGenerateColumns="False" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" SelectedItem="{Binding SelectedMessage}">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Message" Binding="{Binding TypeName}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Message" Binding="{Binding TypeName}" Width="*"></DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <TextBox IsReadOnly="true" Grid.Row="0" Grid.Column="1" Text="{Binding SelectedMessage.JsonText}">
-        </TextBox>
+        <TextBox IsReadOnly="true" Grid.Row="0" Grid.Column="1" Text="{Binding SelectedMessage.MessageJson}" />
+        <TextBox IsReadOnly="true" Grid.Row="1" Grid.Column="1" Text="{Binding SelectedMessage.ProtoObjectJson}" />
     </Grid>
 </Window>

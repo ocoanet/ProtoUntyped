@@ -1,9 +1,16 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ProtoUntyped
 {
-    public class ProtoArray
+    public class ProtoArray : ProtoMember
     {
-        public List<object> Items { get; } = new();
+        public ProtoArray(int fieldNumber, ProtoValue[] items)
+            : base(fieldNumber, items.Select(x => x.Value).ToArray())
+        {
+            Items = items;
+        }
+
+        public ProtoValue[] Items { get; }
     }
 }

@@ -10,7 +10,7 @@ namespace ProtoUntyped.Tests.Messages
 
         [ProtoMember(2)]
         public int[] Int32Array { get; set; }
-        
+
         [ProtoMember(3)]
         public Nested[] MessageArray { get; set; }
 

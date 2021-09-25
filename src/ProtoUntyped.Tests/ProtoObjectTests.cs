@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using System.Linq;
 using DeepEqual.Syntax;
+using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
 
@@ -18,11 +18,11 @@ namespace ProtoUntyped.Tests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Fields =
+                Members =
                 {
-                    new(1, message.Query),
-                    new(2, (long)message.PageNumber),
-                    new(3, (long)message.ResultPerPage),
+                    new ProtoField(1, message.Query, WireType.String),
+                    new ProtoField(2, (long)message.PageNumber, WireType.Varint),
+                    new ProtoField(3, (long)message.ResultPerPage, WireType.Varint),
                 }
             });
         }
@@ -37,10 +37,10 @@ namespace ProtoUntyped.Tests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Fields =
+                Members =
                 {
-                    new(1, message.DoubleValue),
-                    new(2, message.SingleValue),
+                    new ProtoField(1, message.DoubleValue, WireType.Fixed64),
+                    new ProtoField(2, message.SingleValue, WireType.Fixed32),
                 }
             });
         }
@@ -55,16 +55,16 @@ namespace ProtoUntyped.Tests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Fields =
+                Members =
                 {
-                    new(1, (long)message.Int16Value),
-                    new(2, (long)message.UInt16Value),
-                    new(3, (long)message.Int32Value),
-                    new(4, (long)message.UInt32Value),
-                    new(5, (long)message.Int64Value),
-                    new(6, (long)message.UInt64Value),
-                    new(7, (long)message.ByteValue),
-                    new(8, (long)message.SByteValue),
+                    new ProtoField(1, (long)message.Int16Value, WireType.Varint),
+                    new ProtoField(2, (long)message.UInt16Value, WireType.Varint),
+                    new ProtoField(3, (long)message.Int32Value, WireType.Varint),
+                    new ProtoField(4, (long)message.UInt32Value, WireType.Varint),
+                    new ProtoField(5, (long)message.Int64Value, WireType.Varint),
+                    new ProtoField(6, (long)message.UInt64Value, WireType.Varint),
+                    new ProtoField(7, (long)message.ByteValue, WireType.Varint),
+                    new ProtoField(8, (long)message.SByteValue, WireType.Varint),
                 }
             });
         }
@@ -79,15 +79,15 @@ namespace ProtoUntyped.Tests
             
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Fields =
+                Members =
                 {
-                    new(1, (long)message.Id),
-                    new(2, new ProtoObject { Fields =
+                    new ProtoField(1, (long)message.Id, WireType.Varint),
+                    new ProtoField(2, new ProtoObject { Members =
                     {
-                        new ProtoField(1, (long)message.Nested.Value1),
-                        new ProtoField(2, message.Nested.Value2),
+                        new ProtoField(1, (long)message.Nested.Value1, WireType.Varint),
+                        new ProtoField(2, message.Nested.Value2, WireType.String),
                     }}),
-                    new(3, message.Key),    
+                    new ProtoField(3, message.Key, WireType.String),    
                 }
             });
         }
@@ -102,11 +102,11 @@ namespace ProtoUntyped.Tests
             
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Fields =
+                Members =
                 {
-                    new(1, (long)message.Id),
-                    new(2, new List<object>(message.Int32Array.Select(x => (object)(long)x))),
-                    new(3, new List<object>(message.MessageArray.Select(x => (object)ToProtoObject(x)))),    
+                    new ProtoField(1, (long)message.Id, WireType.Varint),
+                    new ProtoArray(2, message.Int32Array.Select(x => new ProtoValue((long)x, WireType.Varint)).ToArray()),
+                    new ProtoArray(3, message.MessageArray.Select(x => new ProtoValue(ToProtoObject(x), WireType.String)).ToArray()),
                 }
             });
 
@@ -114,13 +114,45 @@ namespace ProtoUntyped.Tests
             {
                 return new ProtoObject
                 {
-                    Fields =
+                    Members =
                     {
-                        new ProtoField(1, (long)nested.Id),
-                        new ProtoField(2, nested.Key),
+                        new ProtoField(1, (long)nested.Id, WireType.Varint),
+                        new ProtoField(2, nested.Key, WireType.String),
                     }
                 };
             }
+        }
+        
+        [Fact]
+        public void ShouldParseMessageWithGuidAsEmbeddedMessage()
+        {
+            var message = ThreadLocalFixture.Create<MessageWithGuid>();
+            var bytes = ProtoBufUtil.Serialize(message);
+
+            var protoObject = ProtoObject.Parse(bytes);
+            
+            var protoMember = Assert.Single(protoObject.Members);
+            Assert.Equal(1, protoMember.FieldNumber);
+            
+            var embeddedObject = Assert.IsType<ProtoObject>(protoMember.Value);
+            Assert.Equal(2, embeddedObject.Members.Count);
+        }
+
+        [Fact]
+        public void ShouldParseMessageWithGuidAsGuid()
+        {
+            var message = ThreadLocalFixture.Create<MessageWithGuid>();
+            var bytes = ProtoBufUtil.Serialize(message);
+
+            var protoObject = ProtoObject.Parse(bytes, new ProtoParseOptions { DetectGuids = true });
+            
+            protoObject.ShouldDeepEqual(new ProtoObject
+            {
+                Members =
+                {
+                    new ProtoField(1, message.Guid, WireType.String),   
+                }
+            });
         }
     }
 }

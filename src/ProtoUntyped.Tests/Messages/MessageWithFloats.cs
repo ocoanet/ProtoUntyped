@@ -9,6 +9,6 @@ namespace ProtoUntyped.Tests.Messages
         public double DoubleValue { get; set; }
 
         [ProtoMember(2)]
-        public double SingleValue { get; set; }
+        public float SingleValue { get; set; }
     }
 }

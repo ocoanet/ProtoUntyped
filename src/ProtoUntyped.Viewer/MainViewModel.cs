@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using AutoFixture;
 using AutoFixture.Kernel;
-using ProtoUntyped.Viewer.Annotations;
 using ProtoUntyped.Viewer.Messages;
 
 namespace ProtoUntyped.Viewer
@@ -31,7 +30,7 @@ namespace ProtoUntyped.Viewer
                 if (Equals(value, _selectedMessage))
                     return;
                 _selectedMessage = value;
-                OnPropertyChanged();
+                PropertyChanged?.Invoke(this, new(nameof(SelectedMessage)));
             }
         }
 
@@ -40,7 +39,7 @@ namespace ProtoUntyped.Viewer
             var fixture = new Fixture();
             var types = typeof(MainViewModel).Assembly
                                              .GetTypes()
-                                             .Where(x => x.Namespace == typeof(InstanceStarted).Namespace)
+                                             .Where(x => x.Namespace == typeof(InstanceStarted).Namespace && x.IsClass && !x.IsNested)
                                              .ToList();
 
             var messages = types.SelectMany(x => Enumerable.Range(0, 10).Select(_ => CreateMessage(x)));
@@ -52,12 +51,6 @@ namespace ProtoUntyped.Viewer
                 var context = new SpecimenContext(fixture);
                 return context.Resolve(new SeededRequest(type, null));
             }
-        }
-
-        [NotifyPropertyChangedInvocator]
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }
