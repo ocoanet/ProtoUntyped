@@ -1,6 +1,6 @@
 # ProtoUntyped
 
-Did you ever wanted to perfectly decode unknown [protocol buffer](https://developers.google.com/protocol-buffers) encoded data when you do not have access to the message defintions? Well you can't. But at least, with this library, you can try.
+Did you ever want to perfectly decode unknown [protocol buffer](https://developers.google.com/protocol-buffers) encoded data when you do not have access to the message defintions? Well you can't. But at least, with this library, you can try.
 
 ## Overview
 
@@ -51,7 +51,7 @@ var protoObject = ProtoObject.Decode(bytes, options);
 
 ## Implementation
 
-The protocol buffer wire format contains a sequence of fields. Every field contains the **field number**, the **wire type**, and the **field value**. The field numbers and the wire types can be safely read, so you will always get a valid list of field meta-data. Then ProtoUnType uses heuristics to decode the field values depending on the wire type.
+The protocol buffer wire format contains a sequence of fields. Every field contains the **field number**, the **wire type**, and the **field value**. The field numbers and the wire types can be safely read, so you will always get a valid list of field meta-data. Then ProtoUntyped uses heuristics to decode the field values depending on the wire type.
 
 ### Wire type 0 (Varint)
 Type 0 can be used for `int32, int64, uint32, uint64, sint32, sint64, bool, enum`. The size does not really matter for decoding, but it is required to know if the value is signed. ProtoUntyped always decode type 0 as signed.
@@ -69,4 +69,4 @@ Type 5 can be used for `fixed32, sfixed32, float`. Because protobuf-net uses typ
 
 protobuf-net supports the serialization of a few .NET types like `Guid`, `DateTime` or `decimal`. These types are not part of the protocol buffer format and protobuf-net uses a custom wire format based on embedded messages.
 
-ProtoObject does not decode the BCL types by default but it can be activated using the `ProtoDecodeOptions`.
+ProtoUntyped does not decode the BCL types by default but it can be activated using the `ProtoDecodeOptions`.
