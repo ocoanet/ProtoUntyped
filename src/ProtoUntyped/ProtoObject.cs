@@ -102,9 +102,7 @@ namespace ProtoUntyped
                     return reader.ReadDouble();
 
                 case WireType.String:
-                    // Can be a string or a sub message.
-                    var bytes = reader.AppendBytes(null);
-                    return TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage ? embeddedMessage : Encoding.UTF8.GetString(bytes);
+                    return DecodeString(ref reader, options);
 
                 case WireType.StartGroup:
                 case WireType.EndGroup:
@@ -113,6 +111,18 @@ namespace ProtoUntyped
             }
 
             throw new ArgumentOutOfRangeException();
+        }
+
+        private static object DecodeString(ref ProtoReader.State reader, ProtoDecodeOptions options)
+        {
+            // Can be a string, an embedded message or a byte array.
+            
+            var bytes = reader.AppendBytes(null);
+            
+            if (TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage)
+                return embeddedMessage;
+
+            return options.StringDecoder.TryDecode(bytes, out var s) ? s : bytes;
         }
 
         private static object? TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options)

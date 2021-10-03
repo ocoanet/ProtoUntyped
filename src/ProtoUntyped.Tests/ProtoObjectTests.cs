@@ -122,6 +122,55 @@ namespace ProtoUntyped.Tests
             }
         }
         
+        [Theory]
+        [InlineData("ABC")]
+        [InlineData("ABC 123")]
+        [InlineData("ABC 123\\789.+=#")]
+        public void ShouldParseMessageWithString(string s)
+        {
+            var message = new MessageWithString
+            {
+                Id = 42,
+                Data = s,
+            };
+            
+            var bytes = ProtoBufUtil.Serialize(message);
+
+            var protoObject = ProtoObject.Decode(bytes);
+
+            protoObject.ShouldDeepEqual(new ProtoObject
+            {
+                Members =
+                {
+                    new ProtoField(1, (long)message.Id, WireType.Varint),
+                    new ProtoField(2, message.Data, WireType.String),
+                }
+            });
+        }
+        
+        [Fact]
+        public void ShouldParseMessageWithBytes()
+        {
+            var message = new MessageWithBytes
+            {
+                Id = 42,
+                Data = new byte[] { 0, 1, 200 },
+            };
+            
+            var bytes = ProtoBufUtil.Serialize(message);
+
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { StringDecoder = ProtoStringDecoder.AsciiOnly });
+
+            protoObject.ShouldDeepEqual(new ProtoObject
+            {
+                Members =
+                {
+                    new ProtoField(1, (long)message.Id, WireType.Varint),
+                    new ProtoField(2, message.Data, WireType.String),
+                }
+            });
+        }
+        
         [Fact]
         public void ShouldParseMessageWithGuidAsEmbeddedMessage()
         {
