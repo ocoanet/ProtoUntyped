@@ -1,5 +1,4 @@
 using System.Linq;
-using DeepEqual.Syntax;
 using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
@@ -14,7 +13,7 @@ namespace ProtoUntyped.Tests
             var message = ThreadLocalFixture.Create<SearchRequest>();
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Parse(bytes);
+            var protoObject = ProtoObject.Decode(bytes);
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
@@ -33,7 +32,7 @@ namespace ProtoUntyped.Tests
             var message = ThreadLocalFixture.Create<MessageWithFloats>();
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Parse(bytes);
+            var protoObject = ProtoObject.Decode(bytes);
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
@@ -51,7 +50,7 @@ namespace ProtoUntyped.Tests
             var message = ThreadLocalFixture.Create<MessageWithIntegers>();
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Parse(bytes);
+            var protoObject = ProtoObject.Decode(bytes);
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
@@ -75,7 +74,7 @@ namespace ProtoUntyped.Tests
             var message = ThreadLocalFixture.Create<MessageWithNestedType>();
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Parse(bytes);
+            var protoObject = ProtoObject.Decode(bytes);
             
             protoObject.ShouldDeepEqual(new ProtoObject
             {
@@ -98,7 +97,7 @@ namespace ProtoUntyped.Tests
             var message = ThreadLocalFixture.Create<MessageWithArrays>();
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Parse(bytes);
+            var protoObject = ProtoObject.Decode(bytes);
             
             protoObject.ShouldDeepEqual(new ProtoObject
             {
@@ -129,7 +128,7 @@ namespace ProtoUntyped.Tests
             var message = ThreadLocalFixture.Create<MessageWithGuid>();
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Parse(bytes);
+            var protoObject = ProtoObject.Decode(bytes);
             
             var protoMember = Assert.Single(protoObject.Members);
             Assert.Equal(1, protoMember.FieldNumber);
@@ -144,7 +143,7 @@ namespace ProtoUntyped.Tests
             var message = ThreadLocalFixture.Create<MessageWithGuid>();
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Parse(bytes, new ProtoParseOptions { DetectGuids = true });
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeGuids = true });
             
             protoObject.ShouldDeepEqual(new ProtoObject
             {

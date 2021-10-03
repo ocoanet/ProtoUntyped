@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -37,12 +38,52 @@ namespace ProtoUntyped
             }
         }
 
-        public static ProtoObject Parse(ReadOnlyMemory<byte> data)
+        public override string ToString()
         {
-            return Parse(data, new ProtoParseOptions());
+            var result = new StringBuilder(1024);
+            
+            AppendValue(0, this);
+            
+            return result.ToString();
+            
+            void AppendValue(int indentSize, object value)
+            {
+                switch (value)
+                {
+                    case ProtoObject obj:
+                        result.AppendLine("[message]");
+                        foreach (var member in obj.Members)
+                        {
+                            result.Append(' ', indentSize);
+                            result.AppendFormat(CultureInfo.InvariantCulture, "- {0} = ", member.FieldNumber);
+                            AppendValue(indentSize + 4, member.Value);
+                        }
+                        break;
+                    
+                    case ProtoArray array:
+                        result.AppendLine("[array]");
+                        foreach (var protoValue in array.Items)
+                        {
+                            result.Append(' ', indentSize);
+                            result.AppendFormat(CultureInfo.InvariantCulture, "- ");
+                            AppendValue(indentSize + 4, protoValue.Value);
+                        }
+                        break;
+                    
+                    default:
+                        result.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
+                        result.AppendLine();
+                        break;
+                }
+            }
+        }
+        
+        public static ProtoObject Decode(ReadOnlyMemory<byte> data)
+        {
+            return Decode(data, new ProtoDecodeOptions());
         }
 
-        public static ProtoObject Parse(ReadOnlyMemory<byte> data, ProtoParseOptions options)
+        public static ProtoObject Decode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options)
         {
             var fields = GroupRepeatedFields(ReadFields(data, options));
 
@@ -56,7 +97,7 @@ namespace ProtoUntyped
                          .ToList();
         }
 
-        private static List<ProtoField> ReadFields(ReadOnlyMemory<byte> data, ProtoParseOptions options)
+        private static List<ProtoField> ReadFields(ReadOnlyMemory<byte> data, ProtoDecodeOptions options)
         {
             var fields = new List<ProtoField>();
 
@@ -69,7 +110,7 @@ namespace ProtoUntyped
             return fields;
         }
 
-        private static ProtoField? ReadField(ref ProtoReader.State reader, ProtoParseOptions options)
+        private static ProtoField? ReadField(ref ProtoReader.State reader, ProtoDecodeOptions options)
         {
             if (reader.ReadFieldHeader() == 0)
                 return null;
@@ -81,7 +122,7 @@ namespace ProtoUntyped
             return new ProtoField(fieldNumber, fieldValue, wireType);
         }
 
-        private static object ReadFieldValue(ref ProtoReader.State reader, ProtoParseOptions options)
+        private static object ReadFieldValue(ref ProtoReader.State reader, ProtoDecodeOptions options)
         {
             switch (reader.WireType)
             {
@@ -89,6 +130,9 @@ namespace ProtoUntyped
                     return reader.ReadInt64();
 
                 case WireType.Fixed32:
+                    // Could be an integer, assume floating point because protobuf-net defaults to varint for integers.
+                    return reader.ReadSingle();
+                
                 case WireType.Fixed64:
                     // Could be an integer, assume floating point because protobuf-net defaults to varint for integers.
                     return reader.ReadDouble();
@@ -99,11 +143,7 @@ namespace ProtoUntyped
                     return TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage ? embeddedMessage : Encoding.UTF8.GetString(bytes);
 
                 case WireType.StartGroup:
-                    break;
-
                 case WireType.EndGroup:
-                    break;
-
                 case WireType.SignedVarint:
                     break;
             }
@@ -111,12 +151,12 @@ namespace ProtoUntyped
             throw new ArgumentOutOfRangeException();
         }
 
-        private static object? TryReadEmbeddedMessage(byte[] bytes, ProtoParseOptions options)
+        private static object? TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options)
         {
             // TODO: Add clean validation instead of try/catch.
             try
             {
-                return ConvertToKnownType(Parse(bytes), options);
+                return ConvertToKnownType(Decode(bytes), options);
             }
             catch (Exception)
             {
@@ -124,9 +164,9 @@ namespace ProtoUntyped
             }
         }
 
-        private static object ConvertToKnownType(ProtoObject protoObject, ProtoParseOptions options)
+        private static object ConvertToKnownType(ProtoObject protoObject, ProtoDecodeOptions options)
         {
-            if (options.DetectGuids && TryParseGuid(protoObject) is { } guid)
+            if (options.DecodeGuids && TryParseGuid(protoObject) is { } guid)
                 return guid;
 
             return protoObject;
@@ -152,7 +192,7 @@ namespace ProtoUntyped
             var guidAccessor = new GuidAccessor(low, high);
 
             var version = (guidAccessor.VersionByte & 0xF0) >> 4;
-            if (version >= 1 && version <= 5)
+            if (version is >= 1 and <= 5)
                 return guidAccessor.Guid;
 
             return null;
