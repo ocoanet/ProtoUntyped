@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 
 namespace ProtoUntyped
@@ -12,5 +11,10 @@ namespace ProtoUntyped
         }
 
         public ProtoValue[] Items { get; }
+
+        public override string ToString()
+        {
+            return ProtoFormatter.BuildString(Value);
+        }
     }
 }

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace ProtoUntyped.Tests
 {
-    public class ProtoObjectTests
+    public partial class ProtoObjectTests
     {
         [Fact]
         public void ShouldParseSimpleMessage()

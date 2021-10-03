@@ -15,13 +15,15 @@
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition />
+            <RowDefinition />
         </Grid.RowDefinitions>
-        <DataGrid ItemsSource="{Binding Messages}" AutoGenerateColumns="False" Grid.Row="0" Grid.RowSpan="2" Grid.Column="0" SelectedItem="{Binding SelectedMessage}">
+        <DataGrid ItemsSource="{Binding Messages}" AutoGenerateColumns="False" Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" SelectedItem="{Binding SelectedMessage}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Message" Binding="{Binding TypeName}" Width="*"></DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <TextBox IsReadOnly="true" Grid.Row="0" Grid.Column="1" Text="{Binding SelectedMessage.MessageJson}" />
-        <TextBox IsReadOnly="true" Grid.Row="1" Grid.Column="1" Text="{Binding SelectedMessage.ProtoObjectJson}" />
+        <TextBox IsReadOnly="true" Grid.Row="0" Grid.Column="1" Text="{Binding SelectedMessage.MessageJson, Mode=OneWay}" />
+        <TextBox IsReadOnly="true" Grid.Row="1" Grid.Column="1" Text="{Binding SelectedMessage.ProtoObjectJson, Mode=OneWay}" />
+        <TextBox IsReadOnly="true" Grid.Row="2" Grid.Column="1" Text="{Binding SelectedMessage.ProtoObjectString, Mode=OneWay}" />
     </Grid>
 </Window>

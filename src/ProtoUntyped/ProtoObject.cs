@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -40,44 +39,9 @@ namespace ProtoUntyped
 
         public override string ToString()
         {
-            var result = new StringBuilder(1024);
-            
-            AppendValue(0, this);
-            
-            return result.ToString();
-            
-            void AppendValue(int indentSize, object value)
-            {
-                switch (value)
-                {
-                    case ProtoObject obj:
-                        result.AppendLine("[message]");
-                        foreach (var member in obj.Members)
-                        {
-                            result.Append(' ', indentSize);
-                            result.AppendFormat(CultureInfo.InvariantCulture, "- {0} = ", member.FieldNumber);
-                            AppendValue(indentSize + 4, member.Value);
-                        }
-                        break;
-                    
-                    case ProtoArray array:
-                        result.AppendLine("[array]");
-                        foreach (var protoValue in array.Items)
-                        {
-                            result.Append(' ', indentSize);
-                            result.AppendFormat(CultureInfo.InvariantCulture, "- ");
-                            AppendValue(indentSize + 4, protoValue.Value);
-                        }
-                        break;
-                    
-                    default:
-                        result.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
-                        result.AppendLine();
-                        break;
-                }
-            }
+            return ProtoFormatter.BuildString(this);
         }
-        
+
         public static ProtoObject Decode(ReadOnlyMemory<byte> data)
         {
             return Decode(data, new ProtoDecodeOptions());
