@@ -4,10 +4,22 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
+        <Version>0.0.1</Version>
+        <Authors>Olivier Coanet</Authors>
+        <Description>A decoder for unknown protocol buffer encoded data.</Description>
+        <Copyright>Olivier Coanet</Copyright>
+        <PackageProjectUrl>https://github.com/ocoanet/ProtoUntyped</PackageProjectUrl>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageTags>binary;serialization;protobuf</PackageTags>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     </PropertyGroup>
-    
+
     <ItemGroup>
-        <PackageReference Include="protobuf-net" Version="3.0.73" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+        <PackageReference Include="protobuf-net" Version="3.0.73"/>
     </ItemGroup>
 
 </Project>
