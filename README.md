@@ -1,3 +1,7 @@
+![Build and test](https://github.com/ocoanet/ProtoUntyped/workflows/Build%20and%20test/badge.svg)
+[![NuGet](https://img.shields.io/nuget/v/ProtoUntyped)](https://www.nuget.org/packages/ProtoUntyped/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+
 # ProtoUntyped
 
 Did you ever want to perfectly decode unknown [protocol buffer](https://developers.google.com/protocol-buffers) encoded data when you do not have access to the message defintions? Well you can't. But at least, with this library, you can try.
