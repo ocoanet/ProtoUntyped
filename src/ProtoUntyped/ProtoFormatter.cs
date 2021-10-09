@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Text;
 
@@ -38,7 +39,13 @@ namespace ProtoUntyped
                         BuildString(item, stringBuilder, indentSize + IndentIncrement);
                     }
                     break;
-                    
+                
+                case string _:
+                case Guid _:
+                    stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0}\"", value);
+                    stringBuilder.AppendLine();
+                    break;
+
                 default:
                     stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
                     stringBuilder.AppendLine();

@@ -18,15 +18,34 @@ namespace ProtoUntyped.Tests
             };
 
             var bytes = ProtoBufUtil.Serialize(message);
-
             var protoObject = ProtoObject.Decode(bytes);
 
             var expectedText = MergeLines(new[]
             {
                 "[message]",
-                "- 1 = /users",
+                "- 1 = \"/users\"",
                 "- 2 = 5",
                 "- 3 = 40",
+            });
+
+            protoObject.ToString().ShouldEqual(expectedText);
+        }
+        
+        [Fact]
+        public void ShouldGetStringWithGuid()
+        {
+            var message = new MessageWithGuid
+            {
+                Guid = Guid.NewGuid(),
+            };
+
+            var bytes = ProtoBufUtil.Serialize(message);
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeGuids = true });
+
+            var expectedText = MergeLines(new[]
+            {
+                "[message]",
+                "- 1 = \"" + message.Guid + "\"",
             });
 
             protoObject.ToString().ShouldEqual(expectedText);
@@ -45,7 +64,6 @@ namespace ProtoUntyped.Tests
             };
 
             var bytes = ProtoBufUtil.Serialize(message);
-
             var protoObject = ProtoObject.Decode(bytes);
 
             var expectedText = MergeLines(new[]
