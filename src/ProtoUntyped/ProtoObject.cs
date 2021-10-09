@@ -31,7 +31,7 @@ namespace ProtoUntyped
                 return value switch
                 {
                     ProtoObject protoObject => protoObject.ToFieldDictionary(),
-                    ProtoArray protoArray   => protoArray.Items.Select(x => ConvertValue(x)).ToArray(),
+                    object[] array          => array.Select(x => ConvertValue(x)).ToArray(),
                     _                       => value,
                 };
             }
