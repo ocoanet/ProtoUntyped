@@ -19,13 +19,15 @@ ProtoUntyped is not designed to be used in critical production code. However, it
 Given the following message definition:
 
 ```protobuf
-syntax = "proto3";
-
 message SearchRequest {
   string query = 1;
   int32 page_number = 2;
   int32 result_per_page = 3;
 }
+```
+and the following message:
+```cs
+var message = new SearchRequest { Query = "/users", PageNamer = 2, ResultPerPage = 50 };
 ```
 
 The encoded data can be read using:
@@ -39,23 +41,24 @@ Console.WriteLine(protoObject.ToString());
 which will print:
 
 ```
-[message]
-- 1 = /users
-- 2 = 5
-- 3 = 40
+message {
+- 1 = "/users"
+- 2 = 2
+- 3 = 50
+}
 ```
 
 ProtoUntyped uses a few heuristics to map wire types to .NET types. A few of them can be configured using the `ProtoDecodeOptions` class:
 
 ```cs
-var options = new ProtoDecodeOptions { DecodeGuids = true };
+var options = new ProtoDecodeOptions { DecodeGuid = true };
 
 var protoObject = ProtoObject.Decode(bytes, options);
 ```
 
 ## Implementation
 
-The protocol buffer wire format contains a sequence of fields. Every field contains the **field number**, the **wire type**, and the **field value**. The field numbers and the wire types can be safely read, so you will always get a valid list of field meta-data. Then ProtoUntyped uses heuristics to decode the field values depending on the wire type.
+The protocol buffer wire format contains a sequence of fields. Every field contains the **field number**, the **wire type**, and the **field value**. The field numbers and the wire types can be safely read, so you will always get a valid list of top level field meta-data. Then ProtoUntyped uses heuristics to decode the field values depending on the wire type.
 
 ### Wire type 0 (Varint)
 Type 0 can be used for `int32, int64, uint32, uint64, sint32, sint64, bool, enum`. The size does not really matter for decoding, but it is required to know if the value is signed. ProtoUntyped always decode type 0 as signed.
