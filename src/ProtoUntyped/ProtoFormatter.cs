@@ -40,8 +40,8 @@ namespace ProtoUntyped
                     }
                     break;
                 
-                case string _:
-                case Guid _:
+                case string:
+                case Guid:
                     stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0}\"", value);
                     stringBuilder.AppendLine();
                     break;

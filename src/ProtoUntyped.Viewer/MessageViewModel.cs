@@ -15,7 +15,7 @@ namespace ProtoUntyped.Viewer
             
             using var stream = new MemoryStream();
             Serializer.Serialize(stream, message);
-            ProtoObject = ProtoObject.Decode(stream.GetBuffer().AsMemory(0, (int)stream.Length), new ProtoDecodeOptions { DecodeGuids = true });
+            ProtoObject = ProtoObject.Decode(stream.GetBuffer().AsMemory(0, (int)stream.Length), new ProtoDecodeOptions { DecodeGuid = true });
         }
 
         public string TypeName { get; set; }

@@ -40,7 +40,7 @@ namespace ProtoUntyped.Tests
             };
 
             var bytes = ProtoBufUtil.Serialize(message);
-            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeGuids = true });
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeGuid = true });
 
             var expectedText = MergeLines(new[]
             {

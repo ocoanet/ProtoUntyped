@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
@@ -159,7 +160,7 @@ namespace ProtoUntyped.Tests
             
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { StringDecoder = ProtoStringDecoder.AsciiOnly });
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { StringValidator = IsAscii });
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
@@ -169,6 +170,8 @@ namespace ProtoUntyped.Tests
                     new ProtoField(2, message.Data, WireType.String),
                 }
             });
+
+            static bool IsAscii(string s) => s.All(x => x < 128);
         }
         
         [Fact]
@@ -192,13 +195,61 @@ namespace ProtoUntyped.Tests
             var message = ThreadLocalFixture.Create<MessageWithGuid>();
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeGuids = true });
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeGuid = true });
             
             protoObject.ShouldDeepEqual(new ProtoObject
             {
                 Members =
                 {
                     new ProtoField(1, message.Guid, WireType.String),   
+                }
+            });
+        }
+
+        [Theory]
+        [InlineData("2021-10-23 15:29:53.1234567" )]
+        [InlineData("2021-10-23 15:29:53.123" )]
+        [InlineData("2021-10-23 15:29:53" )]
+        [InlineData("2021-10-23 15:29" )]
+        [InlineData("2021-10-23 15:00" )]
+        [InlineData("2021-10-23" )]
+        [InlineData("2001-06-06" )]
+        [InlineData("2030-06-06" )]
+        public void ShouldParseMessageWithDateTime(DateTime value)
+        {
+            var message = new MessageWithDateTime { Timestamp = value };
+            var bytes = ProtoBufUtil.Serialize(message);
+        
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
+            
+            protoObject.ShouldDeepEqual(new ProtoObject
+            {
+                Members =
+                {
+                    new ProtoField(1, message.Timestamp, WireType.String),   
+                }
+            });
+        }
+        
+        [Theory]
+        [InlineData("0001-01-01 15:29:53.1234567" )]
+        [InlineData("0001-01-01 15:29:53.123" )]
+        [InlineData("0001-01-01 00:00:02" )]
+        [InlineData("0001-01-01 15:29:53" )]
+        [InlineData("0001-01-01 15:35:00" )]
+        [InlineData("0001-01-01 15:00:00" )]
+        public void ShouldParseMessageWithTimeSpan(DateTime value)
+        {
+            var message = new MessageWithTimeSpan { Duration = value.TimeOfDay };
+            var bytes = ProtoBufUtil.Serialize(message);
+        
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
+            
+            protoObject.ShouldDeepEqual(new ProtoObject
+            {
+                Members =
+                {
+                    new ProtoField(1, message.Duration, WireType.String),   
                 }
             });
         }

@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using ProtoBuf;
+using ProtoUntyped.Decoders;
 
 namespace ProtoUntyped
 {
     public class ProtoObject
     {
+        private static readonly Encoding _encoding = new UTF8Encoding(true, true);
+        
         public ProtoObject()
             : this(new())
         {
@@ -121,8 +122,16 @@ namespace ProtoUntyped
             
             if (TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage)
                 return embeddedMessage;
-
-            return options.StringDecoder.TryDecode(bytes, out var s) ? s : bytes;
+            
+            try
+            {
+                var s = _encoding.GetString(bytes);
+                return options.StringValidator.Invoke(s) ? s : bytes;
+            }
+            catch (Exception)
+            {
+                return bytes;
+            }
         }
 
         private static object? TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options)
@@ -140,62 +149,17 @@ namespace ProtoUntyped
 
         private static object ConvertToKnownType(ProtoObject protoObject, ProtoDecodeOptions options)
         {
-            if (options.DecodeGuids && TryParseGuid(protoObject) is { } guid)
+            if (options.DecodeGuid && GuidDecoder.TryParseGuid(protoObject, options) is { } guid)
                 return guid;
+
+            if (options.DecodeDateTime && TimeDecoder.TryParseDateTime(protoObject, options) is { } dateTime)
+                return dateTime;
+            
+            if (options.DecodeTimeSpan && TimeDecoder.TryParseTimeSpan(protoObject, options) is { } timeSpan)
+                return timeSpan;
 
             return protoObject;
         }
-
-        private static Guid? TryParseGuid(ProtoObject protoObject)
-        {
-            if (protoObject.Members.Count != 2)
-                return null;
-
-            if (protoObject.Members[0] is not ProtoField field1 || field1.FieldNumber != 1 || field1.WireType != WireType.Fixed64)
-                return null;
-
-            if (protoObject.Members[1] is not ProtoField field2 || field2.FieldNumber != 2 || field2.WireType != WireType.Fixed64)
-                return null;
-
-            var lowAsDouble = (double)field1.Value;
-            var low = Unsafe.As<double, ulong>(ref lowAsDouble);
-
-            var highAsDouble = (double)field2.Value;
-            var high = Unsafe.As<double, ulong>(ref highAsDouble);
-
-            var guidAccessor = new GuidAccessor(low, high);
-
-            var version = (guidAccessor.VersionByte & 0xF0) >> 4;
-            if (version is >= 1 and <= 5)
-                return guidAccessor.Guid;
-
-            return null;
-        }
-
-        [StructLayout(LayoutKind.Explicit)]
-        private readonly struct GuidAccessor
-        {
-            [FieldOffset(0)]
-            public readonly Guid Guid;
-
-            [FieldOffset(0)]
-            public readonly ulong Low;
-
-            [FieldOffset(8)]
-            public readonly ulong High;
-
-            // Version is bits 4-7 of 8th byte.
-            // See https://www.ietf.org/rfc/rfc4122.txt
-            [FieldOffset(7)]
-            public readonly byte VersionByte;
-
-            public GuidAccessor(ulong low, ulong high)
-            {
-                Guid = default;
-                VersionByte = default;
-                Low = low;
-                High = high;
-            }
-        }
+       
     }
 }
