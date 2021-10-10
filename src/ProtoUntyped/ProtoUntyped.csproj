@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
-        <Version>0.0.2</Version>
+        <Version>0.0.3</Version>
         <Authors>Olivier Coanet</Authors>
         <Description>A decoder for unknown protocol buffer encoded data.</Description>
         <Copyright>Olivier Coanet</Copyright>
