@@ -1,5 +1,7 @@
 using System;
+using System.Globalization;
 using System.Linq;
+using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
 
@@ -22,10 +24,11 @@ namespace ProtoUntyped.Tests
 
             var expectedText = MergeLines(new[]
             {
-                "[message]",
+                "message {",
                 "- 1 = \"/users\"",
                 "- 2 = 5",
                 "- 3 = 40",
+                "}",
             });
 
             protoObject.ToString().ShouldEqual(expectedText);
@@ -44,8 +47,9 @@ namespace ProtoUntyped.Tests
 
             var expectedText = MergeLines(new[]
             {
-                "[message]",
+                "message {",
                 "- 1 = \"" + message.Guid + "\"",
+                "}",
             });
 
             protoObject.ToString().ShouldEqual(expectedText);
@@ -68,11 +72,70 @@ namespace ProtoUntyped.Tests
 
             var expectedText = MergeLines(new[]
             {
-                "[message]",
+                "message {",
                 "- 1 = 42",
-                "- 2 = [message]",
-                "    - 1 = [message]",
+                "- 2 = message {",
+                "    - 1 = message {",
                 "        - 1 = 333",
+                "        }",
+                "    }",
+                "}",
+            });
+
+            protoObject.ToString().ShouldEqual(expectedText);
+        }
+        
+        [Theory]
+        [InlineData("2021-10-23 15:29:53.123" )]
+        [InlineData("2021-10-23 15:29:53" )]
+        [InlineData("2021-10-23 15:29:00" )]
+        [InlineData("2021-10-23 15:00:00" )]
+        [InlineData("2021-10-23" )]
+        [InlineData("2001-06-06" )]
+        [InlineData("2030-06-06" )]
+        public void ShouldGetStringWithDateTime(string dateTime)
+        {
+            var message = new MessageWithDateTime { Timestamp = DateTime.Parse(dateTime, CultureInfo.InvariantCulture) };
+            var bytes = ProtoBufUtil.Serialize(message);
+        
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
+            
+            var expectedText = MergeLines(new[]
+            {
+                "message {",
+                "- 1 = \"" + dateTime + "\"",
+                "}",
+            });
+
+            protoObject.ToString().ShouldEqual(expectedText);
+            
+            protoObject.ShouldDeepEqual(new ProtoObject
+            {
+                Members =
+                {
+                    new ProtoField(1, message.Timestamp, WireType.String),   
+                }
+            });
+        }
+        
+        [Theory]
+        [InlineData("15:29:53.123" )]
+        [InlineData("00:00:02" )]
+        [InlineData("15:29:53" )]
+        [InlineData("15:35:00" )]
+        [InlineData("15:00:00" )]
+        public void ShouldGetStringWithTimeSpan(string timeSpan)
+        {
+            var message = new MessageWithTimeSpan { Duration = TimeSpan.Parse(timeSpan, CultureInfo.InvariantCulture) };
+            var bytes = ProtoBufUtil.Serialize(message);
+        
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
+            
+            var expectedText = MergeLines(new[]
+            {
+                "message {",
+                "- 1 = \"" + timeSpan + "\"",
+                "}",
             });
 
             protoObject.ToString().ShouldEqual(expectedText);
