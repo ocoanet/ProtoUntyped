@@ -36,18 +36,21 @@ namespace ProtoUntyped.Decoders
 
             foreach (var member in protoObject.Members)
             {
+                if (member.Value is not long value)
+                    return null;
+                
                 switch (member)
                 {
                     case ProtoField { FieldNumber: 1, WireType: WireType.Varint }:
-                        ticks.Value = Zag((long)member.Value);
+                        ticks.Value = Zag(value);
                         break;
                     
                     case ProtoField { FieldNumber: 2, WireType: WireType.Varint }:
-                        ticks.Scale = (TimeSpanScale)(long)member.Value;
+                        ticks.Scale = (TimeSpanScale)value;
                         break;
                     
                     case ProtoField { FieldNumber: 3, WireType: WireType.Varint }:
-                        ticks.Kind = (DateTimeKind)(long)member.Value;
+                        ticks.Kind = (DateTimeKind)value;
                         break;
                     
                     default:

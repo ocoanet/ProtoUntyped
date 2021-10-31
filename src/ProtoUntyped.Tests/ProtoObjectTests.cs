@@ -26,7 +26,7 @@ namespace ProtoUntyped.Tests
                 }
             });
         }
-        
+
         [Fact]
         public void ShouldParseMessageWithFloats()
         {
@@ -44,7 +44,7 @@ namespace ProtoUntyped.Tests
                 }
             });
         }
-        
+
         [Fact]
         public void ShouldParseMessageWithIntegers()
         {
@@ -68,7 +68,7 @@ namespace ProtoUntyped.Tests
                 }
             });
         }
-        
+
         [Fact]
         public void ShouldParseMessageWithNestedType()
         {
@@ -76,22 +76,26 @@ namespace ProtoUntyped.Tests
             var bytes = ProtoBufUtil.Serialize(message);
 
             var protoObject = ProtoObject.Decode(bytes);
-            
+
             protoObject.ShouldDeepEqual(new ProtoObject
             {
                 Members =
                 {
                     new ProtoField(1, (long)message.Id, WireType.Varint),
-                    new ProtoField(2, new ProtoObject { Members =
-                    {
-                        new ProtoField(1, (long)message.Nested.Value1, WireType.Varint),
-                        new ProtoField(2, message.Nested.Value2, WireType.String),
-                    }}),
-                    new ProtoField(3, message.Key, WireType.String),    
+                    new ProtoField(2,
+                                   new ProtoObject
+                                   {
+                                       Members =
+                                       {
+                                           new ProtoField(1, (long)message.Nested.Value1, WireType.Varint),
+                                           new ProtoField(2, message.Nested.Value2, WireType.String),
+                                       }
+                                   }),
+                    new ProtoField(3, message.Key, WireType.String),
                 }
             });
         }
-        
+
         [Fact]
         public void ShouldParseMessageWithArrays()
         {
@@ -99,7 +103,7 @@ namespace ProtoUntyped.Tests
             var bytes = ProtoBufUtil.Serialize(message);
 
             var protoObject = ProtoObject.Decode(bytes);
-            
+
             protoObject.ShouldDeepEqual(new ProtoObject
             {
                 Members =
@@ -122,7 +126,7 @@ namespace ProtoUntyped.Tests
                 };
             }
         }
-        
+
         [Theory]
         [InlineData("ABC")]
         [InlineData("ABC 123")]
@@ -134,7 +138,7 @@ namespace ProtoUntyped.Tests
                 Id = 42,
                 Data = s,
             };
-            
+
             var bytes = ProtoBufUtil.Serialize(message);
 
             var protoObject = ProtoObject.Decode(bytes);
@@ -148,7 +152,7 @@ namespace ProtoUntyped.Tests
                 }
             });
         }
-        
+
         [Fact]
         public void ShouldParseMessageWithBytes()
         {
@@ -157,7 +161,7 @@ namespace ProtoUntyped.Tests
                 Id = 42,
                 Data = new byte[] { 0, 1, 200 },
             };
-            
+
             var bytes = ProtoBufUtil.Serialize(message);
 
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { StringValidator = IsAscii });
@@ -173,7 +177,7 @@ namespace ProtoUntyped.Tests
 
             static bool IsAscii(string s) => s.All(x => x < 128);
         }
-        
+
         [Fact]
         public void ShouldParseMessageWithGuidAsEmbeddedMessage()
         {
@@ -181,10 +185,10 @@ namespace ProtoUntyped.Tests
             var bytes = ProtoBufUtil.Serialize(message);
 
             var protoObject = ProtoObject.Decode(bytes);
-            
+
             var protoMember = Assert.Single(protoObject.Members);
             Assert.Equal(1, protoMember.FieldNumber);
-            
+
             var embeddedObject = Assert.IsType<ProtoObject>(protoMember.Value);
             Assert.Equal(2, embeddedObject.Members.Count);
         }
@@ -196,60 +200,82 @@ namespace ProtoUntyped.Tests
             var bytes = ProtoBufUtil.Serialize(message);
 
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeGuid = true });
-            
+
             protoObject.ShouldDeepEqual(new ProtoObject
             {
                 Members =
                 {
-                    new ProtoField(1, message.Guid, WireType.String),   
+                    new ProtoField(1, message.Guid, WireType.String),
                 }
             });
         }
 
         [Theory]
-        [InlineData("2021-10-23 15:29:53.1234567" )]
-        [InlineData("2021-10-23 15:29:53.123" )]
-        [InlineData("2021-10-23 15:29:53" )]
-        [InlineData("2021-10-23 15:29" )]
-        [InlineData("2021-10-23 15:00" )]
-        [InlineData("2021-10-23" )]
-        [InlineData("2001-06-06" )]
-        [InlineData("2030-06-06" )]
+        [InlineData("2021-10-23 15:29:53.1234567")]
+        [InlineData("2021-10-23 15:29:53.123")]
+        [InlineData("2021-10-23 15:29:53")]
+        [InlineData("2021-10-23 15:29")]
+        [InlineData("2021-10-23 15:00")]
+        [InlineData("2021-10-23")]
+        [InlineData("2001-06-06")]
+        [InlineData("2030-06-06")]
         public void ShouldParseMessageWithDateTime(DateTime value)
         {
             var message = new MessageWithDateTime { Timestamp = value };
             var bytes = ProtoBufUtil.Serialize(message);
-        
+
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
-            
+
             protoObject.ShouldDeepEqual(new ProtoObject
             {
                 Members =
                 {
-                    new ProtoField(1, message.Timestamp, WireType.String),   
+                    new ProtoField(1, message.Timestamp, WireType.String),
                 }
             });
         }
-        
+
         [Theory]
-        [InlineData("0001-01-01 15:29:53.1234567" )]
-        [InlineData("0001-01-01 15:29:53.123" )]
-        [InlineData("0001-01-01 00:00:02" )]
-        [InlineData("0001-01-01 15:29:53" )]
-        [InlineData("0001-01-01 15:35:00" )]
-        [InlineData("0001-01-01 15:00:00" )]
+        [InlineData("0001-01-01 15:29:53.1234567")]
+        [InlineData("0001-01-01 15:29:53.123")]
+        [InlineData("0001-01-01 00:00:02")]
+        [InlineData("0001-01-01 15:29:53")]
+        [InlineData("0001-01-01 15:35:00")]
+        [InlineData("0001-01-01 15:00:00")]
         public void ShouldParseMessageWithTimeSpan(DateTime value)
         {
             var message = new MessageWithTimeSpan { Duration = value.TimeOfDay };
             var bytes = ProtoBufUtil.Serialize(message);
-        
+
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
-            
+
             protoObject.ShouldDeepEqual(new ProtoObject
             {
                 Members =
                 {
-                    new ProtoField(1, message.Duration, WireType.String),   
+                    new ProtoField(1, message.Duration, WireType.String),
+                }
+            });
+        }
+
+        [Theory]
+        [InlineData(1)]
+        [InlineData(-1)]
+        [InlineData(0.123)]
+        [InlineData(10000000)]
+        [InlineData(89765464.546748767643)]
+        public void ShouldParseMessageWithDecimal(decimal value)
+        {
+            var message = new MessageWithDecimal { Value = value };
+            var bytes = ProtoBufUtil.Serialize(message);
+
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDecimal = true });
+
+            protoObject.ShouldDeepEqual(new ProtoObject
+            {
+                Members =
+                {
+                    new ProtoField(1, message.Value, WireType.String),
                 }
             });
         }

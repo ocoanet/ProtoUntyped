@@ -158,6 +158,9 @@ namespace ProtoUntyped
             if (options.DecodeTimeSpan && TimeDecoder.TryParseTimeSpan(protoObject, options) is { } timeSpan)
                 return timeSpan;
 
+            if (options.DecodeDecimal && DecimalDecoder.TryParseDecimal(protoObject, options) is { } dec)
+                return dec;
+
             return protoObject;
         }
        

@@ -90,6 +90,28 @@ namespace ProtoUntyped
         /// Specify the delegate that will used to identify valid <see cref="TimeSpan"/> values.
         /// </summary>
         public Func<TimeSpan, bool> TimeSpanValidator { get; set; } = DefaultTimeSpanValidator;
+        
+        /// <summary>
+        /// Enable <see cref="decimal"/> decoding (using protobuf-net format).
+        /// </summary>
+        /// <remarks>
+        /// protobuf-net uses the following nested message to encode decimal:
+        /// <code>
+        /// message Decimal {
+        ///     uint64 lo = 1;
+        ///     uint32 hi = 2;
+        ///     uint32 signScale = 3;
+        /// }
+        /// </code>
+        /// Any nested message that uses the same format might be incorrectly identified as a <see cref="decimal"/>.
+        /// You can use <see cref="DecimalValidator"/> to reject incorrect values.
+        /// </remarks>
+        public bool DecodeDecimal { get; set; }
+        
+        /// <summary>
+        /// Specify the delegate that will used to identify valid <see cref="decimal"/> values.
+        /// </summary>
+        public Func<decimal, bool> DecimalValidator { get; set; } = DefaultDecimalValidator;
 
         /// <summary>
         /// Specify the delegate that will used to identify valid <see cref="String"/> values.
@@ -112,6 +134,11 @@ namespace ProtoUntyped
         }
         
         public static bool DefaultStringValidator(string value)
+        {
+            return true;
+        }
+        
+        public static bool DefaultDecimalValidator(decimal value)
         {
             return true;
         }
