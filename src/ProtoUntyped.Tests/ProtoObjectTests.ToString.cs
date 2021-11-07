@@ -124,6 +124,7 @@ namespace ProtoUntyped.Tests
         [InlineData("15:29:53" )]
         [InlineData("15:35:00" )]
         [InlineData("15:00:00" )]
+        [InlineData("5.15:16:17" )]
         public void ShouldGetStringWithTimeSpan(string timeSpan)
         {
             var message = new MessageWithTimeSpan { Duration = TimeSpan.Parse(timeSpan, CultureInfo.InvariantCulture) };

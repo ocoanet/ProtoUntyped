@@ -66,13 +66,23 @@ namespace ProtoUntyped
                     stringBuilder.AppendLine();
                     break;
                 
-                case TimeSpan { Milliseconds: 0 } timeSpan:
+                case TimeSpan { Milliseconds: 0, Days: 0 } timeSpan:
                     stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:hh\\:mm\\:ss}\"", timeSpan);
                     stringBuilder.AppendLine();
                     break;
                 
-                case TimeSpan { Milliseconds: not 0 } timeSpan:
+                case TimeSpan { Milliseconds: not 0, Days: 0 } timeSpan:
                     stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:hh\\:mm\\:ss\\.fff}\"", timeSpan);
+                    stringBuilder.AppendLine();
+                    break;
+                
+                case TimeSpan { Milliseconds: 0, Days: not 0 } timeSpan:
+                    stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:d\\.hh\\:mm\\:ss}\"", timeSpan);
+                    stringBuilder.AppendLine();
+                    break;
+                
+                case TimeSpan { Milliseconds: not 0, Days: not 0 } timeSpan:
+                    stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:d\\.hh\\:mm\\:ss\\.fff}\"", timeSpan);
                     stringBuilder.AppendLine();
                     break;
 
