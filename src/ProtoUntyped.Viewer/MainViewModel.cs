@@ -1,38 +1,31 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Text.Json;
 using AutoFixture;
 using AutoFixture.Kernel;
+using PropertyChanged;
 using ProtoUntyped.Viewer.Messages;
 
 namespace ProtoUntyped.Viewer
 {
-    public class MainViewModel : INotifyPropertyChanged
+    [AddINotifyPropertyChangedInterface]
+    public class MainViewModel
     {
-        private MessageViewModel _selectedMessage;
-
         public MainViewModel()
         {
             Messages = GenerateMessages();
+            Options.PropertyChanged += (_, _) => ComputeProtoObject();
         }
+
+        public DecodeOptionsViewModel Options { get; } = new();
+        public List<MessageViewModel> Messages { get; }
+        public MessageViewModel SelectedMessage { get; set; }
         
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public List<MessageViewModel> Messages { get; set; }
-
-        public MessageViewModel SelectedMessage
-        {
-            get => _selectedMessage;
-            set
-            {
-                if (Equals(value, _selectedMessage))
-                    return;
-                _selectedMessage = value;
-                PropertyChanged?.Invoke(this, new(nameof(SelectedMessage)));
-            }
-        }
+        public ProtoObject ProtoObject { get; private set; }
+        
+        public string ProtoObjectJson => ProtoObject != null ? JsonSerializer.Serialize(ProtoObject.ToFieldDictionary(), new JsonSerializerOptions { WriteIndented = true }) : null;
+        public string ProtoObjectString => ProtoObject?.ToString();
 
         private static List<MessageViewModel> GenerateMessages()
         {
@@ -51,6 +44,16 @@ namespace ProtoUntyped.Viewer
                 var context = new SpecimenContext(fixture);
                 return context.Resolve(new SeededRequest(type, null));
             }
+        }
+
+        private void OnSelectedMessageChanged()
+        {
+            ComputeProtoObject();
+        }
+
+        private void ComputeProtoObject()
+        {
+            ProtoObject = SelectedMessage != null ? ProtoObject.Decode(SelectedMessage.ProtoBytes, Options.ProtoDecodeOptions) : null;
         }
     }
 }

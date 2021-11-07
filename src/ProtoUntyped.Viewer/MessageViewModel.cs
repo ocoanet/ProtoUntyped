@@ -1,11 +1,11 @@
-using System;
 using System.IO;
 using System.Text.Json;
-using System.Windows.Documents;
+using PropertyChanged;
 using ProtoBuf;
 
 namespace ProtoUntyped.Viewer
 {
+    [AddINotifyPropertyChangedInterface]
     public class MessageViewModel
     {
         public MessageViewModel(object message)
@@ -15,13 +15,11 @@ namespace ProtoUntyped.Viewer
             
             using var stream = new MemoryStream();
             Serializer.Serialize(stream, message);
-            ProtoObject = ProtoObject.Decode(stream.GetBuffer().AsMemory(0, (int)stream.Length), new ProtoDecodeOptions { DecodeGuid = true, DecodeDateTime = true, DecodeTimeSpan = true });
+            ProtoBytes = stream.ToArray();
         }
 
         public string TypeName { get; set; }
         public string MessageJson { get; set; }
-        public ProtoObject ProtoObject { get; set; }
-        public string ProtoObjectJson => JsonSerializer.Serialize(ProtoObject.ToFieldDictionary(), new JsonSerializerOptions { WriteIndented = true });
-        public string ProtoObjectString => ProtoObject.ToString();
+        public byte[] ProtoBytes { get; set; }
     }
 }

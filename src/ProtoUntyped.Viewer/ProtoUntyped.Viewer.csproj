@@ -12,6 +12,7 @@
     
     <ItemGroup>
         <PackageReference Include="AutoFixture" Version="4.15.0" />
+        <PackageReference Include="PropertyChanged.Fody" Version="3.3.1" PrivateAssets="all" />
     </ItemGroup>
 
 </Project>
