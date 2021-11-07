@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using ProtoBuf;
@@ -10,7 +11,7 @@ namespace ProtoUntyped
     public class ProtoObject
     {
         private static readonly Encoding _encoding = new UTF8Encoding(true, true);
-        
+
         public ProtoObject()
             : this(new())
         {
@@ -50,9 +51,26 @@ namespace ProtoUntyped
 
         public static ProtoObject Decode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options)
         {
-            var fields = GroupRepeatedFields(ReadFields(data, options));
+            if (TryDecode(data, options, out var protoObject))
+                return protoObject!;
 
-            return new ProtoObject(fields);
+            throw new ArgumentException("Unable to parse proto-object");
+        }
+
+#if NETSTANDARD2_1
+        public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, [NotNullWhen(true)] out ProtoObject? protoObject)
+#else
+        public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out ProtoObject? protoObject)
+#endif
+        {
+            if (TryReadFields(data, options, out var fields))
+            {
+                protoObject = new ProtoObject(GroupRepeatedFields(fields));
+                return true;
+            }
+
+            protoObject = default;
+            return false;
         }
 
         private static List<ProtoMember> GroupRepeatedFields(List<ProtoField> fields)
@@ -62,67 +80,75 @@ namespace ProtoUntyped
                          .ToList();
         }
 
-        private static List<ProtoField> ReadFields(ReadOnlyMemory<byte> data, ProtoDecodeOptions options)
+        private static bool TryReadFields(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out List<ProtoField> fields)
         {
-            var fields = new List<ProtoField>();
+            fields = new List<ProtoField>();
 
             var reader = ProtoReader.State.Create(data, null);
-            while (ReadField(ref reader, options) is { } field)
+            while (reader.ReadFieldHeader() != 0)
             {
-                fields.Add(field);
+                if (!TryReadField(ref reader, options, out var field) )
+                    return false;
+                
+                fields.Add(field!);
             }
 
-            return fields;
+            return true;
         }
 
-        private static ProtoField? ReadField(ref ProtoReader.State reader, ProtoDecodeOptions options)
+        private static bool TryReadField(ref ProtoReader.State reader, ProtoDecodeOptions options, out ProtoField? field)
         {
-            if (reader.ReadFieldHeader() == 0)
-                return null;
-
             var fieldNumber = reader.FieldNumber;
             var wireType = reader.WireType;
-            var fieldValue = ReadFieldValue(ref reader, options);
+            if (TryReadFieldValue(ref reader, options, out var fieldValue))
+            {
+                field = new ProtoField(fieldNumber, fieldValue!, wireType);
+                return true;
+            }
 
-            return new ProtoField(fieldNumber, fieldValue, wireType);
+            field = default;
+            return false;
         }
 
-        private static object ReadFieldValue(ref ProtoReader.State reader, ProtoDecodeOptions options)
+        private static bool TryReadFieldValue(ref ProtoReader.State reader, ProtoDecodeOptions options, out object? value)
         {
             switch (reader.WireType)
             {
                 case WireType.Varint:
-                    return reader.ReadInt64();
+                    value = reader.ReadInt64();
+                    break;
 
                 case WireType.Fixed32:
                     // Could be an integer, assume floating point because protobuf-net defaults to varint for integers.
-                    return reader.ReadSingle();
-                
+                    value = reader.ReadSingle();
+                    break;
+
                 case WireType.Fixed64:
                     // Could be an integer, assume floating point because protobuf-net defaults to varint for integers.
-                    return reader.ReadDouble();
+                    value = reader.ReadDouble();
+                    break;
 
                 case WireType.String:
-                    return DecodeString(ref reader, options);
-
-                case WireType.StartGroup:
-                case WireType.EndGroup:
-                case WireType.SignedVarint:
+                    value = DecodeString(ref reader, options);
                     break;
+
+                default:
+                    value = default;
+                    return false;
             }
 
-            throw new ArgumentOutOfRangeException();
+            return true;
         }
 
         private static object DecodeString(ref ProtoReader.State reader, ProtoDecodeOptions options)
         {
             // Can be a string, an embedded message or a byte array.
-            
+
             var bytes = reader.AppendBytes(null);
-            
+
             if (TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage)
                 return embeddedMessage;
-            
+
             try
             {
                 var s = _encoding.GetString(bytes);
@@ -136,10 +162,9 @@ namespace ProtoUntyped
 
         private static object? TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options)
         {
-            // TODO: Add clean validation instead of try/catch.
             try
             {
-                return ConvertToKnownType(Decode(bytes), options);
+                return TryDecode(bytes, options, out var protoObject) ? ConvertToKnownType(protoObject!, options) : null; 
             }
             catch (Exception)
             {
@@ -154,7 +179,7 @@ namespace ProtoUntyped
 
             if (options.DecodeDateTime && TimeDecoder.TryParseDateTime(protoObject, options) is { } dateTime)
                 return dateTime;
-            
+
             if (options.DecodeTimeSpan && TimeDecoder.TryParseTimeSpan(protoObject, options) is { } timeSpan)
                 return timeSpan;
 
@@ -163,6 +188,5 @@ namespace ProtoUntyped
 
             return protoObject;
         }
-       
     }
 }
