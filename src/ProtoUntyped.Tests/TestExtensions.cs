@@ -7,6 +7,11 @@ namespace ProtoUntyped.Tests
 {
     public static class TestExtensions
     {
+        public static void ShouldContain(this string actual, string expectedSubstring)
+        {
+            Assert.Contains(expectedSubstring, actual);
+        }
+        
         public static void ShouldEqual<T>(this T actual, T expected)
         {
             Assert.Equal(expected, actual);

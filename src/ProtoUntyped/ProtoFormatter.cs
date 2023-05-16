@@ -32,6 +32,11 @@ namespace ProtoUntyped
                     stringBuilder.Append(' ', indentSize);
                     stringBuilder.AppendLine("}");
                     break;
+                
+                case byte[] byteArray:
+                    stringBuilder.Append(Convert.ToBase64String(byteArray));
+                    stringBuilder.AppendLine();
+                    break;
                     
                 case object[] array:
                     stringBuilder.AppendLine("array [");

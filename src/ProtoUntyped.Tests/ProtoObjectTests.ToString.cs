@@ -84,6 +84,20 @@ namespace ProtoUntyped.Tests
 
             protoObject.ToString().ShouldEqual(expectedText);
         }
+
+        [Fact]
+        public void ShouldGetStringWithBytes()
+        {
+            var data = ThreadLocalFixture.CreateMany<byte>(100);
+            var message = new MessageWithBytes { Data = data };
+            var bytes = ProtoBufUtil.Serialize(message);
+            
+            var protoObject = ProtoObject.Decode(bytes);
+            var protoText = protoObject.ToString();
+            
+            var base64Data = Convert.ToBase64String(data);
+            protoText.ShouldContain(base64Data);
+        }
         
         [Theory]
         [InlineData("2021-10-23 15:29:53.123" )]
