@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 env:
   DOTNET_NOLOGO: 1
-  DOTNET_VERSION: 5.0.x
+  DOTNET_VERSION: 7.0.x
 
 jobs:
   build:
