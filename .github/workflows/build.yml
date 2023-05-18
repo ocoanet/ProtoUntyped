@@ -1,0 +1,36 @@
+name: build
+on: [push, pull_request]
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_VERSION: 5.0.x
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore
+      run: dotnet restore ./src/
+
+    - name: Build
+      run: dotnet build ./src/ --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test ./src/ --configuration Release --no-restore --verbosity normal
+
+    - name: Pack
+      run: dotnet pack --configuration Release --no-build ./src/
+
+    - name: Upload NuGet
+      uses: actions/upload-artifact@v3
+      with:
+        name: NuGet
+        path: output/*.nupkg
