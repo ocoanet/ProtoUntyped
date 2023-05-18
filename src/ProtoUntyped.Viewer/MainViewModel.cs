@@ -30,6 +30,8 @@ namespace ProtoUntyped.Viewer
         private static List<MessageViewModel> GenerateMessages()
         {
             var fixture = new Fixture();
+            fixture.Customizations.Add(new ByteArrayBuilder());
+            
             var types = typeof(MainViewModel).Assembly
                                              .GetTypes()
                                              .Where(x => x.Namespace == typeof(InstanceStarted).Namespace && x.IsClass && !x.IsNested)
@@ -54,6 +56,20 @@ namespace ProtoUntyped.Viewer
         private void ComputeProtoObject()
         {
             ProtoObject = SelectedMessage != null ? ProtoObject.Decode(SelectedMessage.ProtoBytes, Options.ProtoDecodeOptions) : null;
+        }
+
+        private class ByteArrayBuilder : ISpecimenBuilder
+        {
+            public object Create(object request, ISpecimenContext context)
+            {
+                if (!ReferenceEquals(request, typeof(byte[])))
+                    return new NoSpecimen();
+
+                var buffer = new byte[100];
+                Random.Shared.NextBytes(buffer);
+
+                return buffer;
+            }
         }
     }
 }

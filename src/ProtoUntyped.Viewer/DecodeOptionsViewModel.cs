@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using PropertyChanged;
 
+#pragma warning disable 67
+
 namespace ProtoUntyped.Viewer
 {
     [AddINotifyPropertyChangedInterface]

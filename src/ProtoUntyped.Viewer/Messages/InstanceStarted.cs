@@ -32,5 +32,8 @@ namespace ProtoUntyped.Viewer.Messages
 
         [ProtoMember(11, IsRequired = false)]
         public string FrameworkDescription { get; set; }
+        
+        [ProtoMember(12)]
+        public byte[] Data { get; set; }
     }
 }
