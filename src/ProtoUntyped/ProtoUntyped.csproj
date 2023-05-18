@@ -11,6 +11,7 @@
         <PackageProjectUrl>https://github.com/ocoanet/ProtoUntyped</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageTags>binary;serialization;protobuf</PackageTags>
+        <PackageOutputPath>..\..\output</PackageOutputPath>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
         <IncludeSymbols>true</IncludeSymbols>
