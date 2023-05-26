@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoUntyped.Tests", "Proto
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoUntyped.Viewer", "ProtoUntyped.Viewer\ProtoUntyped.Viewer.csproj", "{6E233AE1-F346-4218-AB72-02B97902CA63}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoUntyped.Benchmarks", "ProtoUntyped.Benchmarks\ProtoUntyped.Benchmarks.csproj", "{6889F86E-1A8B-48E3-BECD-A89BE73AF0B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{6E233AE1-F346-4218-AB72-02B97902CA63}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E233AE1-F346-4218-AB72-02B97902CA63}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E233AE1-F346-4218-AB72-02B97902CA63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6889F86E-1A8B-48E3-BECD-A89BE73AF0B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6889F86E-1A8B-48E3-BECD-A89BE73AF0B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6889F86E-1A8B-48E3-BECD-A89BE73AF0B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6889F86E-1A8B-48E3-BECD-A89BE73AF0B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
