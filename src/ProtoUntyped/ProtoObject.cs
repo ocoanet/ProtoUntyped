@@ -162,6 +162,10 @@ namespace ProtoUntyped
 
         private static object? TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options)
         {
+            if (!ProtoDecoder.HasValidFieldHeader(bytes))
+                // Early exit to avoid exceptions when the bytes do not start with a valid field header.
+                return null;
+            
             try
             {
                 return TryDecode(bytes, options, out var protoObject) ? ConvertToKnownType(protoObject!, options) : null; 
