@@ -148,11 +148,14 @@ namespace ProtoUntyped
 
             if (TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage)
                 return embeddedMessage;
+            
+            
+            if (!options.StringValidator.Invoke(bytes))
+                return bytes;
 
             try
             {
-                var s = _encoding.GetString(bytes);
-                return options.StringValidator.Invoke(s) ? s : bytes;
+                return _encoding.GetString(bytes);
             }
             catch (Exception)
             {
@@ -163,7 +166,7 @@ namespace ProtoUntyped
         private static object? TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options)
         {
             if (!ProtoDecoder.HasValidFieldHeader(bytes))
-                // Early exit to avoid exceptions when the bytes do not start with a valid field header.
+                // Avoids exceptions when the bytes do not start with a valid field header.
                 return null;
             
             try

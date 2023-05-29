@@ -113,20 +113,12 @@ namespace ProtoUntyped.Benchmarks.Reference
             if (TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage)
                 return embeddedMessage;
 
+            if (!options.StringValidator.Invoke(bytes))
+                return bytes;
+
             try
             {
-                var decoderFallback = new CustomDecoderFallback();
-                var encoding = (Encoding)_encoding.Clone();
-                encoding.DecoderFallback = decoderFallback;
-
-                encoding.GetCharCount(bytes);
-
-                if (decoderFallback.HasFallback)
-                    return bytes;
-                
-                var s = _encoding.GetString(bytes);
-                
-                return !decoderFallback.HasFallback && options.StringValidator.Invoke(s) ? s : bytes;
+                return _encoding.GetString(bytes);
             }
             catch (Exception)
             {
@@ -161,45 +153,6 @@ namespace ProtoUntyped.Benchmarks.Reference
                 return dec;
 
             return protoObject;
-        }
-
-
-        private class CustomDecoderFallback : DecoderFallback//DecoderReplacementFallback
-        {
-            public bool HasFallback { get; private set; }
-            
-            public override DecoderFallbackBuffer CreateFallbackBuffer() => new CustomDecoderFallbackBuffer(this);
-
-            public override int MaxCharCount => ReplacementFallback.MaxCharCount;
-            
-            private class CustomDecoderFallbackBuffer : DecoderFallbackBuffer
-            {
-                private readonly DecoderFallbackBuffer _inner = new DecoderReplacementFallbackBuffer((DecoderReplacementFallback)ReplacementFallback);
-                private readonly CustomDecoderFallback _decoderFallback;
-
-                public CustomDecoderFallbackBuffer(CustomDecoderFallback decoderFallback)
-                {
-                    _decoderFallback = decoderFallback;
-                }
-
-                public override bool Fallback(byte[] bytesUnknown, int index)
-                {
-                    _decoderFallback.HasFallback = true;
-                    return _inner.Fallback(bytesUnknown, index);
-                }
-
-                public override char GetNextChar()
-                {
-                    return _inner.GetNextChar();
-                }
-
-                public override bool MovePrevious()
-                {
-                    return _inner.MovePrevious();
-                }
-
-                public override int Remaining => _inner.Remaining;
-            }
         }
     }
 }

@@ -112,11 +112,12 @@ namespace ProtoUntyped
         /// Specify the delegate that will used to identify valid <see cref="decimal"/> values.
         /// </summary>
         public Func<decimal, bool> DecimalValidator { get; set; } = DefaultDecimalValidator;
-
+        
+        
         /// <summary>
         /// Specify the delegate that will used to identify valid <see cref="String"/> values.
         /// </summary>
-        public Func<string, bool> StringValidator { get; set; } = DefaultStringValidator;
+        public Func<Memory<byte>, bool> StringValidator { get; set; } = DefaultStringValidator;
 
         public static bool DefaultGuidValidator((Guid Guid, byte Version) value)
         {
@@ -132,10 +133,12 @@ namespace ProtoUntyped
         {
             return value <= TimeSpan.FromDays(60);
         }
+
+        public static ReadOnlySpan<byte> DefaultStringValidatorInvalidBytes => new byte[] { 0, 1, 2, 3, 4, 5, 6 };
         
-        public static bool DefaultStringValidator(string value)
+        public static bool DefaultStringValidator(Memory<byte> value)
         {
-            return true;
+            return value.Span.IndexOfAny(DefaultStringValidatorInvalidBytes) == -1;
         }
         
         public static bool DefaultDecimalValidator(decimal value)

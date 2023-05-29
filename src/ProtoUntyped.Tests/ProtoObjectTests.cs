@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text;
 using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
@@ -153,18 +154,25 @@ namespace ProtoUntyped.Tests
             });
         }
 
-        [Fact]
-        public void ShouldParseMessageWithBytes()
+        [Theory]
+        [InlineData(new byte[] { 0 })]
+        [InlineData(new byte[] { 1 })]
+        [InlineData(new byte[] { 2 })]
+        [InlineData(new byte[] { 3 })]
+        [InlineData(new byte[] { 4 })]
+        [InlineData(new byte[] { 5 })]
+        [InlineData(new byte[] { 200 })]
+        public void ShouldParseMessageWithBytes(byte[] data)
         {
             var message = new MessageWithBytes
             {
                 Id = 42,
-                Data = new byte[] { 0, 1, 200 },
+                Data = data,
             };
 
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { StringValidator = IsAscii });
+            var protoObject = ProtoObject.Decode(bytes);
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
@@ -174,8 +182,6 @@ namespace ProtoUntyped.Tests
                     new ProtoField(2, message.Data, WireType.String),
                 }
             });
-
-            static bool IsAscii(string s) => s.All(x => x < 128);
         }
 
         [Fact]
