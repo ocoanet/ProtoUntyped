@@ -41,7 +41,12 @@ namespace ProtoUntyped
 
         public override string ToString()
         {
-            return ProtoFormatter.BuildString(this);
+            return ToString(ProtoFormatter.Default);
+        }
+        
+        public string ToString(ProtoFormatter formatter)
+        {
+            return formatter.BuildString(this);
         }
 
         public static ProtoObject Decode(ReadOnlyMemory<byte> data)

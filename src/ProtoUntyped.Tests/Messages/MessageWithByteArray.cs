@@ -3,7 +3,7 @@ using ProtoBuf;
 namespace ProtoUntyped.Tests.Messages
 {
     [ProtoContract]
-    public class MessageWithBytes
+    public class MessageWithByteArray
     {
         [ProtoMember(1)]
         public int Id { get; set; }

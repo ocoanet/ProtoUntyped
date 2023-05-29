@@ -49,7 +49,7 @@ namespace ProtoUntyped.Tests
             dictionary.ShouldDeepEqual(new()
             {
                 [1] = 123L,
-                [2] = new object[] { 1L, 2L, 3L },
+                [2] = new[] { 1L, 2L, 3L },
                 [3] = new object[]
                 {
                     new Dictionary<int, object> { [1] = 1001L, [2] = "1" },

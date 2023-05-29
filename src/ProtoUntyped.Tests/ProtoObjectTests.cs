@@ -164,7 +164,7 @@ namespace ProtoUntyped.Tests
         [InlineData(new byte[] { 200 })]
         public void ShouldParseMessageWithBytes(byte[] data)
         {
-            var message = new MessageWithBytes
+            var message = new MessageWithByteArray
             {
                 Id = 42,
                 Data = data,

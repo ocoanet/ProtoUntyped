@@ -86,19 +86,41 @@ namespace ProtoUntyped.Tests
         }
 
         [Fact]
-        public void ShouldGetStringWithBytes()
+        public void ShouldGetStringWithByteArray()
         {
-            var data = ThreadLocalFixture.CreateMany<byte>(100);
-            var message = new MessageWithBytes { Data = data };
+            var message = new MessageWithByteArray { Data = new byte[] { 1, 2, 3 } };
             var bytes = ProtoBufUtil.Serialize(message);
             
             var protoObject = ProtoObject.Decode(bytes);
             var protoText = protoObject.ToString();
             
-            var base64Data = Convert.ToBase64String(data);
-            protoText.ShouldContain(base64Data);
+            protoText.ShouldContain("array [ 1 2 3 ]");
         }
-        
+
+        [Fact]
+        public void ShouldGetStringWithInt32Array()
+        {
+            var message = new MessageWithArrays { Int32Array = new[] { 1, 2, 3 } };
+            var bytes = ProtoBufUtil.Serialize(message);
+            
+            var protoObject = ProtoObject.Decode(bytes);
+            var protoText = protoObject.ToString();
+            
+            protoText.ShouldContain("array [ 1 2 3 ]");
+        }
+
+        [Fact]
+        public void ShouldGetStringWithDecimalArray()
+        {
+            var message = new MessageWithDecimalArray { Values = new[] { 1.1m, 2.2m, 3.3m } };
+            var bytes = ProtoBufUtil.Serialize(message);
+
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDecimal = true });
+            var protoText = protoObject.ToString();
+            
+            protoText.ShouldContain("array [ 1.1 2.2 3.3 ]");
+        }
+
         [Theory]
         [InlineData("2021-10-23 15:29:53.123" )]
         [InlineData("2021-10-23 15:29:53" )]
