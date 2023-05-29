@@ -88,13 +88,14 @@ namespace ProtoUntyped.Tests
         [Fact]
         public void ShouldGetStringWithByteArray()
         {
-            var message = new MessageWithByteArray { Data = new byte[] { 1, 2, 3 } };
+            var data = ThreadLocalFixture.CreateMany<byte>(20);
+            var message = new MessageWithByteArray { Data = data };
             var bytes = ProtoBufUtil.Serialize(message);
             
             var protoObject = ProtoObject.Decode(bytes);
             var protoText = protoObject.ToString();
             
-            protoText.ShouldContain("array [ 1 2 3 ]");
+            protoText.ShouldContain(Convert.ToBase64String(data));
         }
 
         [Fact]

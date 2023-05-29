@@ -34,9 +34,9 @@ namespace ProtoUntyped
                     break;
                 
                 case byte[] array:
-                    FormatNumericArray(stringBuilder, indentSize, array);
+                    FormatByteArray(stringBuilder, indentSize, array);
                     break;
-                
+
                 case float[] array:
                     FormatNumericArray(stringBuilder, indentSize, array);
                     break;
@@ -89,6 +89,12 @@ namespace ProtoUntyped
 
             stringBuilder.Append(' ', indentSize);
             stringBuilder.AppendLine("]");
+        }
+
+        protected virtual void FormatByteArray(StringBuilder stringBuilder, int indentSize, byte[] array)
+        {
+            stringBuilder.Append(Convert.ToBase64String(array));
+            stringBuilder.AppendLine();
         }
 
         protected virtual void FormatProtoObject(StringBuilder stringBuilder, int indentSize, ProtoObject obj)
