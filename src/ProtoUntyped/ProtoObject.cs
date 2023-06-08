@@ -178,6 +178,7 @@ public class ProtoObject
             StringWireTypeDecodingMode.String          => "",
             StringWireTypeDecodingMode.EmbeddedMessage => new ProtoObject(),
             StringWireTypeDecodingMode.Bytes           => Array.Empty<byte>(),
+            _                                          => throw new NotSupportedException($"Unknown string decoding mode {options.EmptyStringDecodingMode}"),
         };
     }
 
