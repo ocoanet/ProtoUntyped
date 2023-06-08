@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ProtoUntyped
 {
@@ -118,6 +119,14 @@ namespace ProtoUntyped
         /// Specify the delegate that will used to identify valid <see cref="String"/> values.
         /// </summary>
         public Func<Memory<byte>, bool> StringValidator { get; set; } = DefaultStringValidator;
+
+        /// <summary>
+        /// Specify how empty strings should are decoded.
+        /// </summary>
+        /// <remarks>
+        /// "Empty strings" refers to records with the wire type 2 (LEN) with an empty payload.
+        /// </remarks>
+        public StringWireTypeDecodingMode EmptyStringDecodingMode { get; set; }
 
         public static bool DefaultGuidValidator((Guid Guid, byte Version) value)
         {

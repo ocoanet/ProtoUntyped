@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ProtoBuf;
@@ -284,6 +285,46 @@ namespace ProtoUntyped.Tests
                     new ProtoField(1, message.Value, WireType.String),
                 }
             });
+        }
+
+        [Theory]
+        [MemberData(nameof(ShouldDecodeEmptyBytesUsingSpecifiedDecodingModeData))]
+        public void ShouldDecodeEmptyBytesUsingSpecifiedDecodingMode(StringWireTypeDecodingMode decodingMode, object expectedValue)
+        {
+            var message = new MessageWithByteArray { Data = Array.Empty<byte>() };
+            var bytes = ProtoBufUtil.Serialize(message);
+
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { EmptyStringDecodingMode = decodingMode });
+
+            protoObject.ShouldDeepEqual(new ProtoObject
+            {
+                Members =
+                {
+                    new ProtoField(2, expectedValue, WireType.String),
+                }
+            });
+        }
+
+        public static IEnumerable<object[]> ShouldDecodeEmptyBytesUsingSpecifiedDecodingModeData
+        {
+            get
+            {
+                yield return new object[] { StringWireTypeDecodingMode.Bytes, Array.Empty<byte>() };
+                yield return new object[] { StringWireTypeDecodingMode.String, "" };
+                yield return new object[] { StringWireTypeDecodingMode.EmbeddedMessage, new ProtoObject() };
+            }
+        }
+        
+        [Fact]
+        public void ShouldDecodeEmptyBytesUsingAllDecodingMode()
+        {
+            var message = new MessageWithByteArray { Data = Array.Empty<byte>() };
+            var bytes = ProtoBufUtil.Serialize(message);
+
+            foreach (var decodingMode in Enum.GetValues<StringWireTypeDecodingMode>())
+            {
+                ProtoObject.Decode(bytes, new ProtoDecodeOptions { EmptyStringDecodingMode = decodingMode });
+            }
         }
     }
 }

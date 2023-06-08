@@ -43,7 +43,7 @@ namespace ProtoUntyped
         {
             return ToString(ProtoFormatter.Default);
         }
-        
+
         public string ToString(ProtoFormatter formatter)
         {
             return formatter.BuildString(this);
@@ -92,9 +92,9 @@ namespace ProtoUntyped
             var reader = ProtoReader.State.Create(data, null);
             while (reader.ReadFieldHeader() != 0)
             {
-                if (!TryReadField(ref reader, options, out var field) )
+                if (!TryReadField(ref reader, options, out var field))
                     return false;
-                
+
                 fields.Add(field!);
             }
 
@@ -105,6 +105,7 @@ namespace ProtoUntyped
         {
             var fieldNumber = reader.FieldNumber;
             var wireType = reader.WireType;
+
             if (TryReadFieldValue(ref reader, options, out var fieldValue))
             {
                 field = new ProtoField(fieldNumber, fieldValue!, wireType);
@@ -151,10 +152,12 @@ namespace ProtoUntyped
 
             var bytes = reader.AppendBytes(null);
 
+            if (bytes.Length == 0)
+                return DecodeEmptyString(options);
+
             if (TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage)
                 return embeddedMessage;
-            
-            
+
             if (!options.StringValidator.Invoke(bytes))
                 return bytes;
 
@@ -168,15 +171,25 @@ namespace ProtoUntyped
             }
         }
 
+        private static object DecodeEmptyString(ProtoDecodeOptions options)
+        {
+            return options.EmptyStringDecodingMode switch
+            {
+                StringWireTypeDecodingMode.String          => "",
+                StringWireTypeDecodingMode.EmbeddedMessage => new ProtoObject(),
+                StringWireTypeDecodingMode.Bytes           => Array.Empty<byte>(),
+            };
+        }
+
         private static object? TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options)
         {
             if (!ProtoDecoder.HasValidFieldHeader(bytes))
                 // Avoids exceptions when the bytes do not start with a valid field header.
                 return null;
-            
+
             try
             {
-                return TryDecode(bytes, options, out var protoObject) ? ConvertToKnownType(protoObject!, options) : null; 
+                return TryDecode(bytes, options, out var protoObject) ? ConvertToKnownType(protoObject!, options) : null;
             }
             catch (Exception)
             {
