@@ -1,18 +1,17 @@
 ﻿using System.Windows;
 
-namespace ProtoUntyped.Viewer
-{
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
-    {
-        protected override void OnStartup(StartupEventArgs e)
-        {
-            base.OnStartup(e);
+namespace ProtoUntyped.Viewer;
 
-            var window = new MainWindow { DataContext = new MainViewModel() };
-            window.Show();
-        }
+/// <summary>
+/// Interaction logic for App.xaml
+/// </summary>
+public partial class App : Application
+{
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        var window = new MainWindow { DataContext = new MainViewModel() };
+        window.Show();
     }
 }

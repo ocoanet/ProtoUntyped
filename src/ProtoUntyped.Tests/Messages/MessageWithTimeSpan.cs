@@ -1,12 +1,11 @@
 using System;
 using ProtoBuf;
 
-namespace ProtoUntyped.Tests.Messages
+namespace ProtoUntyped.Tests.Messages;
+
+[ProtoContract]
+public class MessageWithTimeSpan
 {
-    [ProtoContract]
-    public class MessageWithTimeSpan
-    {
-        [ProtoMember(1)]
-        public TimeSpan Duration { get; set; }
-    }
+    [ProtoMember(1)]
+    public TimeSpan Duration { get; set; }
 }

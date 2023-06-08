@@ -1,17 +1,16 @@
 using System.IO;
 using ProtoBuf;
 
-namespace ProtoUntyped.Tests
+namespace ProtoUntyped.Tests;
+
+public static class ProtoBufUtil
 {
-    public static class ProtoBufUtil
+    public static byte[] Serialize<T>(T obj)
     {
-        public static byte[] Serialize<T>(T obj)
-        {
-            using var stream = new MemoryStream();
+        using var stream = new MemoryStream();
 
-            Serializer.Serialize(stream, obj);
+        Serializer.Serialize(stream, obj);
 
-            return stream.ToArray();
-        }
+        return stream.ToArray();
     }
 }

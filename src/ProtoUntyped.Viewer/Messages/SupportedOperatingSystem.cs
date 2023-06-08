@@ -1,8 +1,7 @@
-namespace ProtoUntyped.Viewer.Messages
+namespace ProtoUntyped.Viewer.Messages;
+
+public enum SupportedOperatingSystem
 {
-    public enum SupportedOperatingSystem
-    {
-        Windows = 0,
-        Linux = 1,
-    }
+    Windows = 0,
+    Linux = 1,
 }
