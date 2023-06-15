@@ -24,6 +24,29 @@ public class ProtoObject
 
     public List<ProtoMember> Members { get; }
 
+    public void SortMembers()
+    {
+        Members.Sort((x, y) => x.FieldNumber.CompareTo(y.FieldNumber));
+    }
+    
+    public void SortMembers(bool recursive)
+    {
+        if (recursive)
+            Accept(ProtoObjectMemberSorter.Instance);
+        else
+            SortMembers();
+    }
+
+    public void Accept(ProtoObjectVisitor visitor)
+    {
+        visitor.Visit(this);
+
+        foreach (var member in Members)
+        {
+            member.Accept(visitor);
+        }
+    }
+
     public Dictionary<int, object> ToFieldDictionary()
     {
         return Members.ToDictionary(x => x.FieldNumber, x => ConvertValue(x.Value));

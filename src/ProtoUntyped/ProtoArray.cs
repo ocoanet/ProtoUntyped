@@ -35,4 +35,13 @@ public class ProtoArray : ProtoMember
             
         return value;
     }
+    
+    public override void Accept(ProtoObjectVisitor visitor)
+    {
+        foreach (var item in Items)
+        {
+            if (item.Value is ProtoObject protoObject)
+                protoObject.Accept(visitor);
+        }
+    }
 }

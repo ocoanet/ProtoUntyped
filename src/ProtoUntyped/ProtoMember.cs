@@ -10,4 +10,6 @@ public abstract class ProtoMember
 
     public int FieldNumber { get; }
     public object Value { get; }
+
+    public abstract void Accept(ProtoObjectVisitor visitor);
 }

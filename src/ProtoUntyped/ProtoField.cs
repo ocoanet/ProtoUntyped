@@ -16,4 +16,10 @@ public class ProtoField : ProtoMember
     }
 
     public WireType WireType { get; }
+    
+    public override void Accept(ProtoObjectVisitor visitor)
+    {
+        if (Value is ProtoObject protoObject)
+            protoObject.Accept(visitor);
+    }
 }
