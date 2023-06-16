@@ -1,8 +1,11 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace ProtoUntyped;
 
+[DebuggerTypeProxy(typeof(ProtoArrayDebugView))]
+[DebuggerDisplay("FieldNumber = {FieldNumber}, Length = {Items.Length}")]
 public class ProtoArray : ProtoMember
 {
     public ProtoArray(int fieldNumber, ProtoValue[] items)

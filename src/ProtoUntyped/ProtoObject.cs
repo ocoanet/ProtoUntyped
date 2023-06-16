@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ using ProtoUntyped.Decoders;
 
 namespace ProtoUntyped;
 
+[DebuggerDisplay("{" + nameof(ProtoUntypedDebuggerDisplay) + "." + nameof(ProtoUntypedDebuggerDisplay.GetDebugString) + "(this)}")]
 public class ProtoObject
 {
     private static readonly Encoding _encoding = new UTF8Encoding(true, true);

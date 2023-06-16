@@ -1,7 +1,9 @@
+using System.Diagnostics;
 using ProtoBuf;
 
 namespace ProtoUntyped;
 
+[DebuggerDisplay("FieldNumber = {FieldNumber}, WireType = {WireType}, Value = {" + nameof(ProtoUntypedDebuggerDisplay) + "." + nameof(ProtoUntypedDebuggerDisplay.GetDebugValue) + "(this)}")]
 public class ProtoField : ProtoMember
 {
     public ProtoField(int fieldNumber, object value, WireType wireType)
