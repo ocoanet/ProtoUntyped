@@ -17,10 +17,20 @@ public class ProtoFormatter
 
     public static ProtoFormatter Default { get; } = new();
 
-    protected internal string BuildString(object value)
+    protected internal string BuildString(ProtoObject protoObject)
     {
         var stringBuilder = new StringBuilder(1024);
-        BuildString(stringBuilder, 0, value);
+        BuildString(stringBuilder, 0, protoObject);
+
+        return stringBuilder.ToString();
+    }
+    
+    protected internal string BuildString(ProtoMember protoMember)
+    {
+        var stringBuilder = new StringBuilder(1024);
+        
+        stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "- {0} = ", protoMember.FieldNumber);
+        BuildString(stringBuilder, _indentIncrement, protoMember.Value);
 
         return stringBuilder.ToString();
     }

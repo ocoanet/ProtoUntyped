@@ -22,4 +22,9 @@ public class ProtoField : ProtoMember
         if (Value is ProtoObject protoObject)
             protoObject.Accept(visitor);
     }
+
+    public override string ToString()
+    {
+        return ProtoFormatter.Default.BuildString(this);
+    }
 }
