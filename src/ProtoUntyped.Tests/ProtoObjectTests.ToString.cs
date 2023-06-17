@@ -150,7 +150,7 @@ partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, message.Timestamp, WireType.String),
                 }

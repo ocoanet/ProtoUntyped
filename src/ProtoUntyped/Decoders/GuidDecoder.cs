@@ -9,13 +9,13 @@ internal static class GuidDecoder
 {
     public static Guid? TryParseGuid(ProtoObject protoObject, ProtoDecodeOptions options)
     {
-        if (protoObject.Members.Count is not 2)
+        if (protoObject.Fields.Count is not 2)
             return null;
 
-        if (protoObject.Members[0] is not ProtoField field1 || field1.FieldNumber != 1 || field1.WireType != WireType.Fixed64)
+        if (protoObject.Fields[0] is not ProtoField field1 || field1.FieldNumber != 1 || field1.WireType != WireType.Fixed64)
             return null;
 
-        if (protoObject.Members[1] is not ProtoField field2 || field2.FieldNumber != 2 || field2.WireType != WireType.Fixed64)
+        if (protoObject.Fields[1] is not ProtoField field2 || field2.FieldNumber != 2 || field2.WireType != WireType.Fixed64)
             return null;
 
         var lowAsDouble = (double)field1.Value;

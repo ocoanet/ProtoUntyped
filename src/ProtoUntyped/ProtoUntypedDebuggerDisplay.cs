@@ -14,6 +14,6 @@ internal static class ProtoUntypedDebuggerDisplay
 
     public static string GetDebugString(ProtoObject protoObject)
     {
-        return $"FieldCount = {protoObject.Members.Count}";
+        return $"FieldCount = {protoObject.Fields.Count}";
     }
 }

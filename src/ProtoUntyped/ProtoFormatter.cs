@@ -25,7 +25,7 @@ public class ProtoFormatter
         return stringBuilder.ToString();
     }
     
-    protected internal string BuildString(ProtoMember protoMember)
+    protected internal string BuildString(ProtoField protoMember)
     {
         var stringBuilder = new StringBuilder(1024);
         
@@ -110,7 +110,7 @@ public class ProtoFormatter
     protected virtual void FormatProtoObject(StringBuilder stringBuilder, int indentSize, ProtoObject obj)
     {
         stringBuilder.AppendLine("message {");
-        foreach (var member in obj.Members)
+        foreach (var member in obj.Fields)
         {
             stringBuilder.Append(' ', indentSize);
             stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "- {0} = ", member.FieldNumber);

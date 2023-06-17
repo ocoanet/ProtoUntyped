@@ -1,10 +1,8 @@
 using ProtoBuf;
 
-// TODO: replace by struct
-
 namespace ProtoUntyped;
 
-public class ProtoValue
+public readonly struct ProtoValue
 {
     public ProtoValue(object value, WireType wireType)
     {

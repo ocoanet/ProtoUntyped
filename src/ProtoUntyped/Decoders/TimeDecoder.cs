@@ -18,7 +18,7 @@ internal static class TimeDecoder
 
     public static TimeSpan? TryParseTimeSpan(ProtoObject protoObject, ProtoDecodeOptions options)
     {
-        if (protoObject.Members.Any(x => x.FieldNumber == 3)) // Kind should not be specified for TimeSpan
+        if (protoObject.Fields.Any(x => x.FieldNumber == 3)) // Kind should not be specified for TimeSpan
             return null;
             
         if (TryParseScaledTicks(protoObject) is not { } ticks || ticks.ToTimeSpan() is not { } timeSpan)
@@ -29,12 +29,12 @@ internal static class TimeDecoder
 
     private static ScaledTicks? TryParseScaledTicks(ProtoObject protoObject)
     {
-        if (protoObject.Members.Count is 0 or > 3)
+        if (protoObject.Fields.Count is 0 or > 3)
             return null;
 
         var ticks = new ScaledTicks();
 
-        foreach (var member in protoObject.Members)
+        foreach (var member in protoObject.Fields)
         {
             if (member.Value is not long value)
                 return null;

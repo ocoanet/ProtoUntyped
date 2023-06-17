@@ -21,7 +21,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, message.Query, WireType.String),
                     new ProtoField(2, (long)message.PageNumber, WireType.Varint),
@@ -40,7 +40,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, message.DoubleValue, WireType.Fixed64),
                     new ProtoField(2, message.SingleValue, WireType.Fixed32),
@@ -58,7 +58,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, (long)message.Int16Value, WireType.Varint),
                     new ProtoField(2, (long)message.UInt16Value, WireType.Varint),
@@ -82,13 +82,13 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, (long)message.Id, WireType.Varint),
                     new ProtoField(2,
                                    new ProtoObject
                                    {
-                                       Members =
+                                       Fields =
                                        {
                                            new ProtoField(1, (long)message.Nested.Value1, WireType.Varint),
                                            new ProtoField(2, message.Nested.Value2, WireType.String),
@@ -109,11 +109,11 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, (long)message.Id, WireType.Varint),
-                    new ProtoArray(2, message.Int32Array.Select(x => new ProtoValue((long)x, WireType.Varint)).ToArray()),
-                    new ProtoArray(3, message.MessageArray.Select(x => new ProtoValue(ToProtoObject(x), WireType.String)).ToArray()),
+                    new RepeatedProtoField(2, message.Int32Array.Select(x => new ProtoValue((long)x, WireType.Varint)).ToArray()),
+                    new RepeatedProtoField(3, message.MessageArray.Select(x => new ProtoValue(ToProtoObject(x), WireType.String)).ToArray()),
                 }
             });
 
@@ -121,7 +121,7 @@ public partial class ProtoObjectTests
             {
                 return new ProtoObject
                 {
-                    Members =
+                    Fields =
                     {
                         new ProtoField(1, (long)nested.Id, WireType.Varint),
                         new ProtoField(2, nested.Key, WireType.String),
@@ -148,7 +148,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, (long)message.Id, WireType.Varint),
                     new ProtoField(2, message.Data, WireType.String),
@@ -178,7 +178,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, (long)message.Id, WireType.Varint),
                     new ProtoField(2, message.Data, WireType.String),
@@ -194,11 +194,11 @@ public partial class ProtoObjectTests
 
             var protoObject = ProtoObject.Decode(bytes);
 
-            var protoMember = Assert.Single(protoObject.Members);
+            var protoMember = Assert.Single(protoObject.Fields);
             Assert.Equal(1, protoMember.FieldNumber);
 
             var embeddedObject = Assert.IsType<ProtoObject>(protoMember.Value);
-            Assert.Equal(2, embeddedObject.Members.Count);
+            Assert.Equal(2, embeddedObject.Fields.Count);
         }
 
         [Fact]
@@ -211,7 +211,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, message.Guid, WireType.String),
                 }
@@ -236,7 +236,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, message.Timestamp, WireType.String),
                 }
@@ -259,7 +259,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, message.Duration, WireType.String),
                 }
@@ -281,7 +281,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(1, message.Value, WireType.String),
                 }
@@ -299,7 +299,7 @@ public partial class ProtoObjectTests
 
             protoObject.ShouldDeepEqual(new ProtoObject
             {
-                Members =
+                Fields =
                 {
                     new ProtoField(2, expectedValue, WireType.String),
                 }

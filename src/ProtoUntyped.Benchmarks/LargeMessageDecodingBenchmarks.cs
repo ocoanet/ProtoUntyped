@@ -1,5 +1,4 @@
 ﻿using BenchmarkDotNet.Attributes;
-using ProtoUntyped.Benchmarks.Reference;
 
 namespace ProtoUntyped.Benchmarks;
 
@@ -13,12 +12,6 @@ public class LargeMessageDecodingBenchmarks
         _data = Convert.FromBase64String(File.ReadAllText(filePath));
     }
 
-    [Benchmark(Baseline = true)]
-    public ProtoObject DecodeV1()
-    {
-        return ProtoObjectV1.Decode(_data);
-    }
-    
     [Benchmark]
     public ProtoObject DecodeV2()
     {

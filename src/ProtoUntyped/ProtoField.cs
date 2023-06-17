@@ -1,14 +1,16 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using ProtoBuf;
 
 namespace ProtoUntyped;
 
 [DebuggerDisplay("FieldNumber = {FieldNumber}, WireType = {WireType}, Value = {" + nameof(ProtoUntypedDebuggerDisplay) + "." + nameof(ProtoUntypedDebuggerDisplay.GetDebugValue) + "(this)}")]
-public class ProtoField : ProtoMember
+public class ProtoField
 {
     public ProtoField(int fieldNumber, object value, WireType wireType)
-        : base(fieldNumber, value)
     {
+        FieldNumber = fieldNumber;
+        Value = value;
         WireType = wireType;
     }
 
@@ -17,12 +19,13 @@ public class ProtoField : ProtoMember
     {
     }
 
+    public int FieldNumber { get; }
+    public object Value { get; }
     public WireType WireType { get; }
     
-    public override void Accept(ProtoObjectVisitor visitor)
+    public virtual IEnumerable<ProtoValue> GetProtoValues()
     {
-        if (Value is ProtoObject protoObject)
-            protoObject.Accept(visitor);
+        yield return new ProtoValue(Value, WireType);
     }
 
     public override string ToString()

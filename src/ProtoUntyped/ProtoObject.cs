@@ -19,39 +19,34 @@ public class ProtoObject
     {
     }
 
-    public ProtoObject(List<ProtoMember> members)
+    public ProtoObject(List<ProtoField> fields)
     {
-        Members = members;
+        Fields = fields;
     }
 
-    public List<ProtoMember> Members { get; }
+    public List<ProtoField> Fields { get; }
 
-    public void SortMembers()
+    public void SortFields()
     {
-        Members.Sort((x, y) => x.FieldNumber.CompareTo(y.FieldNumber));
+        Fields.Sort((x, y) => x.FieldNumber.CompareTo(y.FieldNumber));
     }
     
-    public void SortMembers(bool recursive)
+    public void SortFields(bool recursive)
     {
+        SortFields();
+
         if (recursive)
-            Accept(ProtoObjectMemberSorter.Instance);
-        else
-            SortMembers();
-    }
-
-    public void Accept(ProtoObjectVisitor visitor)
-    {
-        visitor.Visit(this);
-
-        foreach (var member in Members)
         {
-            member.Accept(visitor);
+            foreach (var protoObject in Fields.SelectMany(x => x.GetProtoValues()).Select(x => x.Value).OfType<ProtoObject>())
+            {
+                protoObject.SortFields(true);
+            }
         }
     }
 
     public Dictionary<int, object> ToFieldDictionary()
     {
-        return Members.ToDictionary(x => x.FieldNumber, x => ConvertValue(x.Value));
+        return Fields.ToDictionary(x => x.FieldNumber, x => ConvertValue(x.Value));
 
         static object ConvertValue(object value)
         {
@@ -103,10 +98,10 @@ public class ProtoObject
         return false;
     }
 
-    private static List<ProtoMember> GroupRepeatedFields(List<ProtoField> fields)
+    private static List<ProtoField> GroupRepeatedFields(List<ProtoField> fields)
     {
         return fields.GroupBy(x => x.FieldNumber)
-                     .Select(g => g.Count() == 1 ? (ProtoMember)g.Single() : new ProtoArray(g.Key, g.Select(x => new ProtoValue(x.Value, x.WireType)).ToArray()))
+                     .Select(g => g.Count() == 1 ? g.Single() : new RepeatedProtoField(g.Key, g.Select(x => new ProtoValue(x.Value, x.WireType)).ToArray()))
                      .ToList();
     }
 

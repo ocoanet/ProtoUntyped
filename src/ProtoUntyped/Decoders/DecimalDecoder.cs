@@ -6,14 +6,14 @@ internal static class DecimalDecoder
 {
     public static decimal? TryParseDecimal(ProtoObject protoObject, ProtoDecodeOptions options)
     {
-        if (protoObject.Members.Count is 0 or > 3)
+        if (protoObject.Fields.Count is 0 or > 3)
             return null;
 
         var loField = 0ul;
         var highField = 0u;
         var signScaleField = 0u;
 
-        foreach (var member in protoObject.Members)
+        foreach (var member in protoObject.Fields)
         {
             if (member.Value is not long value)
                 return null;
