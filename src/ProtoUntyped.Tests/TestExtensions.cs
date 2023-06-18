@@ -16,6 +16,11 @@ public static class TestExtensions
     {
         Assert.Equal(expected, actual);
     }
+    
+    public static void ShouldNotEqual<T>(this T actual, T expected)
+    {
+        Assert.NotEqual(expected, actual);
+    }
         
     public static void ShouldDeepEqual<T>(this T actual, T expected)
     {
