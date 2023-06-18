@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.Linq;
 using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
@@ -24,14 +23,15 @@ partial class ProtoObjectTests
             var bytes = ProtoBufUtil.Serialize(message);
             var protoObject = ProtoObject.Decode(bytes);
 
-            var expectedText = MergeLines(new[]
-            {
-                "message {",
-                "- 1 = \"/users\"",
-                "- 2 = 5",
-                "- 3 = 40",
-                "}",
-            });
+            var expectedText =
+                """
+                message {
+                - 1 = "/users"
+                - 2 = 5
+                - 3 = 40
+                }
+
+                """;
 
             protoObject.ToString().ShouldEqual(expectedText);
         }
@@ -47,12 +47,13 @@ partial class ProtoObjectTests
             var bytes = ProtoBufUtil.Serialize(message);
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeGuid = true });
 
-            var expectedText = MergeLines(new[]
-            {
-                "message {",
-                "- 1 = \"" + message.Guid + "\"",
-                "}",
-            });
+            var expectedText =
+                $$"""
+                message {
+                - 1 = "{{message.Guid}}"
+                }
+
+                """;
 
             protoObject.ToString().ShouldEqual(expectedText);
         }
@@ -72,17 +73,18 @@ partial class ProtoObjectTests
             var bytes = ProtoBufUtil.Serialize(message);
             var protoObject = ProtoObject.Decode(bytes);
 
-            var expectedText = MergeLines(new[]
-            {
-                "message {",
-                "- 1 = 42",
-                "- 2 = message {",
-                "    - 1 = message {",
-                "        - 1 = 333",
-                "        }",
-                "    }",
-                "}",
-            });
+            var expectedText =
+                """
+                message {
+                - 1 = 42
+                - 2 = message {
+                    - 1 = message {
+                        - 1 = 333
+                        }
+                    }
+                }
+
+                """;
 
             protoObject.ToString().ShouldEqual(expectedText);
         }
@@ -139,12 +141,13 @@ partial class ProtoObjectTests
 
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
 
-            var expectedText = MergeLines(new[]
-            {
-                "message {",
-                "- 1 = \"" + dateTime + "\"",
-                "}",
-            });
+            var expectedText =
+                $$"""
+                message {
+                - 1 = "{{dateTime}}"
+                }
+
+                """;
 
             protoObject.ToString().ShouldEqual(expectedText);
 
@@ -171,16 +174,15 @@ partial class ProtoObjectTests
 
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
 
-            var expectedText = MergeLines(new[]
-            {
-                "message {",
-                "- 1 = \"" + timeSpan + "\"",
-                "}",
-            });
+            var expectedText =
+                $$"""
+                message {
+                - 1 = "{{timeSpan}}"
+                }
+
+                """;
 
             protoObject.ToString().ShouldEqual(expectedText);
         }
-
-        private static string MergeLines(string[] lines) => string.Concat(lines.Select(x => x + Environment.NewLine));
     }
 }
