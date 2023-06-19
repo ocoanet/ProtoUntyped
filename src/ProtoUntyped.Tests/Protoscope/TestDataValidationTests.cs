@@ -18,12 +18,12 @@ public class TestDataValidationTests
 
     [Theory]
     [MemberData(nameof(GetProtoscopeBinaryFilePathsData))]
-    public void ShouldDecodeProtoscopeBinaryFile(string filePath)
+    public void ShouldDecodeProtoscopeBinaryFile(TestDataPath filePath)
     {
-        var data = File.ReadAllBytes(filePath);
+        var data = File.ReadAllBytes(filePath.Value);
         var decodeOptions = new ProtoDecodeOptions();
             
-        var succeeded = ProtoObject.TryDecode(data, decodeOptions, out _);
+        var succeeded = ProtoObject.TryDecode(data, decodeOptions, out var protoObject);
             
         succeeded.ShouldEqual(true);
     }
@@ -33,21 +33,26 @@ public class TestDataValidationTests
         return GetProtoscopeBinaryFilePaths().Select(x => new object[] { x });
     }
 
-    private static string[] GetProtoscopeBinaryFilePaths()
+    private static TestDataPath[] GetProtoscopeBinaryFilePaths()
     {
         var directoryPath = Path.Combine(AppContext.BaseDirectory, "Protoscope", "TestData");
         var filePaths = Directory.GetFiles(directoryPath, "*.pb");
         
-        // These files contain unsupported features.
         var excludedFileNames = new[]
         {
-            "groups.pb",
-            "message.pb",
-            "oneof.pb",
+            "groups.pb", // Not supported: contains invalid start and end group tags
         };
-
-
+        
         return filePaths.Where(x => !excludedFileNames.Contains(Path.GetFileName(x)))
+                        .Select(x => new TestDataPath(x))
                         .ToArray();
+    }
+
+    public readonly record struct TestDataPath(string Value)
+    {
+        public override string ToString()
+        {
+            return Path.GetFileName(Value);
+        }
     }
 }

@@ -20,11 +20,18 @@ public class ProtoObject
     }
 
     public ProtoObject(List<ProtoField> fields)
+        : this(fields, false)
+    {
+    }
+    
+    public ProtoObject(List<ProtoField> fields, bool isGroup)
     {
         Fields = fields;
+        IsGroup = isGroup;
     }
 
     public List<ProtoField> Fields { get; }
+    public bool IsGroup { get; }
 
     public void SortFields()
     {
@@ -90,12 +97,17 @@ public class ProtoObject
     {
         if (TryReadFields(data, options, out var fields))
         {
-            protoObject = new ProtoObject(GroupRepeatedFields(fields));
+            protoObject = CreateProtoObject(fields, false);
             return true;
         }
 
         protoObject = default;
         return false;
+    }
+
+    private static ProtoObject CreateProtoObject(List<ProtoField> fields, bool isGroup)
+    {
+        return new ProtoObject(GroupRepeatedFields(fields), isGroup);
     }
 
     private static List<ProtoField> GroupRepeatedFields(List<ProtoField> fields)
@@ -157,12 +169,39 @@ public class ProtoObject
             case WireType.String:
                 value = DecodeString(ref reader, options);
                 break;
+            
+            case WireType.StartGroup:
+                return TryReadGroup(ref reader, options, out value);
 
             default:
                 value = default;
                 return false;
         }
 
+        return true;
+    }
+    
+    private static bool TryReadGroup(ref ProtoReader.State reader, ProtoDecodeOptions options, out object? value)
+    {
+        var subItemToken = reader.StartSubItem();
+
+        var fields = new List<ProtoField>();
+        
+        while (reader.ReadFieldHeader() != 0)
+        {
+            if (!TryReadField(ref reader, options, out var field))
+            {
+                value = null;
+                return false;
+            }
+
+            fields.Add(field!);
+        }
+        
+        reader.EndSubItem(subItemToken);
+
+        value = CreateProtoObject(fields, true);
+        
         return true;
     }
 
