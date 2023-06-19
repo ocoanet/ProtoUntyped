@@ -73,9 +73,9 @@ public partial class ProtoObjectTests
         }
 
         [Fact]
-        public void ShouldParseMessageWithNestedType()
+        public void ShouldParseMessageWithNestedTypes()
         {
-            var message = ThreadLocalFixture.Create<MessageWithNestedType>();
+            var message = ThreadLocalFixture.Create<MessageWithNestedTypes>();
             var bytes = ProtoBufUtil.Serialize(message);
 
             var protoObject = ProtoObject.Decode(bytes);
@@ -90,13 +90,61 @@ public partial class ProtoObjectTests
                                    {
                                        Fields =
                                        {
-                                           new ProtoField(1, (long)message.Nested.Value1, WireType.Varint),
-                                           new ProtoField(2, message.Nested.Value2, WireType.String),
+                                           new ProtoField(1,
+                                                          new ProtoObject
+                                                          {
+                                                              Fields =
+                                                              {
+                                                                  new ProtoField(1, (long)message.Nested1.Nested2.Value1, WireType.Varint),
+                                                                  new ProtoField(2, message.Nested1.Nested2.Value2, WireType.String),
+                                                              }
+                                                          },
+                                                          WireType.String),
                                        }
-                                   }),
+                                   },
+                                   WireType.String),
                     new ProtoField(3, message.Key, WireType.String),
                 }
             });
+        }
+        
+        [Fact]
+        public void ShouldParseMessageWithGroups()
+        {
+            var message = ThreadLocalFixture.Create<MessageWithGroups>();
+            var bytes = ProtoBufUtil.Serialize(message);
+
+            var protoObject = ProtoObject.Decode(bytes);
+
+            protoObject.ShouldDeepEqual(new ProtoObject
+            {
+                Fields =
+                {
+                    new ProtoField(1, (long)message.Id, WireType.Varint),
+                    new ProtoField(2,
+                                   new ProtoObject
+                                   {
+                                       Fields =
+                                       {
+                                           new ProtoField(1,
+                                                          new ProtoObject
+                                                          {
+                                                              Fields =
+                                                              {
+                                                                  new ProtoField(1, (long)message.Nested1.Nested2.Value1, WireType.Varint),
+                                                                  new ProtoField(2, message.Nested1.Nested2.Value2, WireType.String),
+                                                              }
+                                                          },
+                                                          WireType.StartGroup),
+                                       }
+                                   },
+                                   WireType.StartGroup),
+                    new ProtoField(3, message.Key, WireType.String),
+                }
+            });
+            
+            protoObject.Fields[1].IsGroup.ShouldEqual(true);
+            ((ProtoObject)protoObject.Fields[1].Value).Fields[0].IsGroup.ShouldEqual(true);
         }
 
         [Fact]

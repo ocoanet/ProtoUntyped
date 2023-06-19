@@ -20,18 +20,11 @@ public class ProtoObject
     }
 
     public ProtoObject(List<ProtoField> fields)
-        : this(fields, false)
-    {
-    }
-    
-    public ProtoObject(List<ProtoField> fields, bool isGroup)
     {
         Fields = fields;
-        IsGroup = isGroup;
     }
 
     public List<ProtoField> Fields { get; }
-    public bool IsGroup { get; }
 
     public void SortFields()
     {
@@ -97,7 +90,7 @@ public class ProtoObject
     {
         if (TryReadFields(data, options, out var fields))
         {
-            protoObject = CreateProtoObject(fields, false);
+            protoObject = CreateProtoObject(fields);
             return true;
         }
 
@@ -105,9 +98,9 @@ public class ProtoObject
         return false;
     }
 
-    private static ProtoObject CreateProtoObject(List<ProtoField> fields, bool isGroup)
+    private static ProtoObject CreateProtoObject(List<ProtoField> fields)
     {
-        return new ProtoObject(GroupRepeatedFields(fields), isGroup);
+        return new ProtoObject(GroupRepeatedFields(fields));
     }
 
     private static List<ProtoField> GroupRepeatedFields(List<ProtoField> fields)
@@ -200,7 +193,7 @@ public class ProtoObject
         
         reader.EndSubItem(subItemToken);
 
-        value = CreateProtoObject(fields, true);
+        value = CreateProtoObject(fields);
         
         return true;
     }

@@ -59,15 +59,16 @@ partial class ProtoObjectTests
         }
 
         [Fact]
-        public void ShouldGetStringWithNestedNestedTypes()
+        public void ShouldGetStringWithNestedTypes()
         {
-            var message = new MessageWithMultipleNestedTypes
+            var message = new MessageWithNestedTypes
             {
                 Id = 42,
                 Nested1 = new()
                 {
-                    Nested2 = new() { Value = 333 },
-                }
+                    Nested2 = new() { Value1 = 333, Value2 = "ABC" },
+                },
+                Key = "K",
             };
 
             var bytes = ProtoBufUtil.Serialize(message);
@@ -80,8 +81,10 @@ partial class ProtoObjectTests
                 - 2 = message {
                     - 1 = message {
                         - 1 = 333
+                        - 2 = "ABC"
                         }
                     }
+                - 3 = "K"
                 }
 
                 """;

@@ -14,15 +14,12 @@ public class ProtoField
         WireType = wireType;
     }
 
-    public ProtoField(int fieldNumber, ProtoObject value)
-        : this(fieldNumber, value, WireType.String)
-    {
-    }
-
     public int FieldNumber { get; }
     public object Value { get; }
     public WireType WireType { get; }
-    
+
+    public bool IsGroup => WireType == WireType.StartGroup;
+
     public virtual IEnumerable<ProtoValue> GetProtoValues()
     {
         yield return new ProtoValue(Value, WireType);

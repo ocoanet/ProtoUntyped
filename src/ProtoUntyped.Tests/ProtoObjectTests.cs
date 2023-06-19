@@ -26,7 +26,7 @@ public partial class ProtoObjectTests
                 new ProtoField(7, "X", WireType.String),
                 new ProtoField(6, "X", WireType.String),
                 new ProtoField(4, 1, WireType.Fixed32),
-                new ProtoField(5, nestedObject),
+                new ProtoField(5, nestedObject, WireType.String),
             },
         };
 
@@ -67,7 +67,7 @@ public partial class ProtoObjectTests
                 new ProtoField(7, "X", WireType.String),
                 new ProtoField(6, "X", WireType.String),
                 new ProtoField(4, 1, WireType.Fixed32),
-                new ProtoField(5, nestedObject1),
+                new ProtoField(5, nestedObject1, WireType.String),
                 new RepeatedProtoField(9, new ProtoValue[] { new ProtoValue(nestedObject2, WireType.String) }),
             },
         };
