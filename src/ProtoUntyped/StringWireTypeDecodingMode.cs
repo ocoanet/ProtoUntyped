@@ -1,7 +1,9 @@
-﻿namespace ProtoUntyped;
+﻿using ProtoBuf;
+
+namespace ProtoUntyped;
 
 /// <summary>
-/// Specifies how the string wire type (LEN) is decoded.
+/// Specifies how the <see cref="WireType.String"/> wire type (LEN) should be decoded.
 /// </summary>
 public enum StringWireTypeDecodingMode
 {

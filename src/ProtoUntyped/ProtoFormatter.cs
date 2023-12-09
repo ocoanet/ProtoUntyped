@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -17,10 +18,10 @@ public class ProtoFormatter
 
     public static ProtoFormatter Default { get; } = new();
 
-    protected internal string BuildString(ProtoObject protoObject)
+    protected internal string BuildString(ProtoObject fieldContainer)
     {
         var stringBuilder = new StringBuilder(1024);
-        BuildString(stringBuilder, 0, protoObject);
+        BuildString(stringBuilder, 0, fieldContainer);
 
         return stringBuilder.ToString();
     }
@@ -40,7 +41,7 @@ public class ProtoFormatter
         switch (value)
         {
             case ProtoObject obj:
-                FormatProtoObject(stringBuilder, indentSize, obj);
+                FormatProtoObject(stringBuilder, indentSize, obj.Fields);
                 break;
                 
             case byte[] array:
@@ -107,10 +108,10 @@ public class ProtoFormatter
         stringBuilder.AppendLine();
     }
 
-    protected virtual void FormatProtoObject(StringBuilder stringBuilder, int indentSize, ProtoObject obj)
+    protected virtual void FormatProtoObject(StringBuilder stringBuilder, int indentSize, IReadOnlyList<ProtoField> fields)
     {
         stringBuilder.AppendLine("message {");
-        foreach (var member in obj.Fields)
+        foreach (var member in fields)
         {
             stringBuilder.Append(' ', indentSize);
             stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "- {0} = ", member.FieldNumber);

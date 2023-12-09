@@ -3,32 +3,43 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
-using ProtoBuf;
 using ProtoUntyped.Decoders;
 
 namespace ProtoUntyped;
 
+/// <summary>
+/// Represents a decoded protobuf message read.
+/// </summary>
+/// <remarks>
+/// The goal of the <see cref="ProtoObject"/> is to be as close as possible to the serialized object.
+/// </remarks>
+[DebuggerTypeProxy(typeof(ProtoObjectDebugView))]
 [DebuggerDisplay("{" + nameof(ProtoUntypedDebuggerDisplay) + "." + nameof(ProtoUntypedDebuggerDisplay.GetDebugString) + "(this)}")]
 public class ProtoObject
 {
-    private static readonly Encoding _encoding = new UTF8Encoding(true, true);
-
-    public ProtoObject()
-        : this(new())
+    public static readonly ProtoObject Empty = new ProtoObject(Array.Empty<ProtoField>());
+    
+    private readonly List<ProtoField> _fields;
+    private readonly ILookup<int, ProtoField> _fieldsLookup;
+    
+    public ProtoObject(params ProtoField[] fields)
+        : this(fields.ToList())
     {
     }
 
     public ProtoObject(List<ProtoField> fields)
     {
-        Fields = fields;
+        _fields = fields;
+        _fieldsLookup = fields.ToLookup(x => x.FieldNumber);
     }
 
-    public List<ProtoField> Fields { get; }
+    public IReadOnlyList<ProtoField> Fields => _fields;
+
+    public IEnumerable<ProtoField> GetFields(int fieldNumber) => _fieldsLookup[fieldNumber];
 
     public void SortFields()
     {
-        Fields.Sort((x, y) => x.FieldNumber.CompareTo(y.FieldNumber));
+        _fields.Sort((x, y) => x.FieldNumber.CompareTo(y.FieldNumber));
     }
     
     public void SortFields(bool recursive)
@@ -37,7 +48,7 @@ public class ProtoObject
 
         if (recursive)
         {
-            foreach (var protoObject in Fields.SelectMany(x => x.GetProtoValues()).Select(x => x.Value).OfType<ProtoObject>())
+            foreach (var protoObject in _fields.SelectMany(x => x.GetValues()).OfType<ProtoObject>())
             {
                 protoObject.SortFields(true);
             }
@@ -74,196 +85,25 @@ public class ProtoObject
         return Decode(data, new ProtoDecodeOptions());
     }
 
-    public static ProtoObject Decode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options)
+    public static ProtoObject Decode(ReadOnlyMemory<byte> data, ProtoDecodeOptions decodeOptions)
     {
-        if (TryDecode(data, options, out var protoObject))
+        if (TryDecode(data, decodeOptions, out var protoObject))
             return protoObject!;
 
-        throw new ArgumentException("Unable to parse proto-object");
+        throw new ArgumentException("Unable to parse object from wire format");
     }
 
 #if NETSTANDARD2_1
-    public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, [NotNullWhen(true)] out ProtoObject? protoObject)
+    public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions decodeOptions, [NotNullWhen(true)] out ProtoObject? protoObject)
 #else
-        public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out ProtoObject? protoObject)
+    public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions decodeOptions, out ProtoObject? protoObject)
 #endif
     {
-        if (TryReadFields(data, options, out var fields))
-        {
-            protoObject = CreateProtoObject(fields);
-            return true;
-        }
-
-        protoObject = default;
-        return false;
+        return ProtoDecoder.TryDecode(data, decodeOptions, out protoObject);
     }
 
-    private static ProtoObject CreateProtoObject(List<ProtoField> fields)
+    public static ProtoObject Decode(ProtoWireObject wireObject, ProtoDecodeOptions decodeOptions)
     {
-        return new ProtoObject(GroupRepeatedFields(fields));
-    }
-
-    private static List<ProtoField> GroupRepeatedFields(List<ProtoField> fields)
-    {
-        return fields.GroupBy(x => x.FieldNumber)
-                     .Select(g => g.Count() == 1 ? g.Single() : new RepeatedProtoField(g.Key, g.Select(x => new ProtoValue(x.Value, x.WireType)).ToArray()))
-                     .ToList();
-    }
-
-    private static bool TryReadFields(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out List<ProtoField> fields)
-    {
-        fields = new List<ProtoField>();
-
-        var reader = ProtoReader.State.Create(data, null);
-        while (reader.ReadFieldHeader() != 0)
-        {
-            if (!TryReadField(ref reader, options, out var field))
-                return false;
-
-            fields.Add(field!);
-        }
-
-        return true;
-    }
-
-    private static bool TryReadField(ref ProtoReader.State reader, ProtoDecodeOptions options, out ProtoField? field)
-    {
-        var fieldNumber = reader.FieldNumber;
-        var wireType = reader.WireType;
-
-        if (TryReadFieldValue(ref reader, options, out var fieldValue))
-        {
-            field = new ProtoField(fieldNumber, fieldValue!, wireType);
-            return true;
-        }
-
-        field = default;
-        return false;
-    }
-
-    private static bool TryReadFieldValue(ref ProtoReader.State reader, ProtoDecodeOptions options, out object? value)
-    {
-        switch (reader.WireType)
-        {
-            case WireType.Varint:
-                value = reader.ReadInt64();
-                break;
-
-            case WireType.Fixed32:
-                // Could be an integer, assume floating point because protobuf-net defaults to varint for integers.
-                value = reader.ReadSingle();
-                break;
-
-            case WireType.Fixed64:
-                // Could be an integer, assume floating point because protobuf-net defaults to varint for integers.
-                value = reader.ReadDouble();
-                break;
-
-            case WireType.String:
-                value = DecodeString(ref reader, options);
-                break;
-            
-            case WireType.StartGroup:
-                return TryReadGroup(ref reader, options, out value);
-
-            default:
-                value = default;
-                return false;
-        }
-
-        return true;
-    }
-    
-    private static bool TryReadGroup(ref ProtoReader.State reader, ProtoDecodeOptions options, out object? value)
-    {
-        var subItemToken = reader.StartSubItem();
-
-        var fields = new List<ProtoField>();
-        
-        while (reader.ReadFieldHeader() != 0)
-        {
-            if (!TryReadField(ref reader, options, out var field))
-            {
-                value = null;
-                return false;
-            }
-
-            fields.Add(field!);
-        }
-        
-        reader.EndSubItem(subItemToken);
-
-        value = CreateProtoObject(fields);
-        
-        return true;
-    }
-
-    private static object DecodeString(ref ProtoReader.State reader, ProtoDecodeOptions options)
-    {
-        // Can be a string, an embedded message or a byte array.
-
-        var bytes = reader.AppendBytes(null);
-
-        if (bytes.Length == 0)
-            return DecodeEmptyString(options);
-
-        if (TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage)
-            return embeddedMessage;
-
-        if (!options.StringValidator.Invoke(bytes))
-            return bytes;
-
-        try
-        {
-            return _encoding.GetString(bytes);
-        }
-        catch (Exception)
-        {
-            return bytes;
-        }
-    }
-
-    private static object DecodeEmptyString(ProtoDecodeOptions options)
-    {
-        return options.EmptyStringDecodingMode switch
-        {
-            StringWireTypeDecodingMode.String          => "",
-            StringWireTypeDecodingMode.EmbeddedMessage => new ProtoObject(),
-            StringWireTypeDecodingMode.Bytes           => Array.Empty<byte>(),
-            _                                          => throw new NotSupportedException($"Unknown string decoding mode {options.EmptyStringDecodingMode}"),
-        };
-    }
-
-    private static object? TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options)
-    {
-        if (!ProtoDecoder.HasValidFieldHeader(bytes))
-            // Avoids exceptions when the bytes do not start with a valid field header.
-            return null;
-
-        try
-        {
-            return TryDecode(bytes, options, out var protoObject) ? ConvertToKnownType(protoObject!, options) : null;
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
-
-    private static object ConvertToKnownType(ProtoObject protoObject, ProtoDecodeOptions options)
-    {
-        if (options.DecodeGuid && GuidDecoder.TryParseGuid(protoObject, options) is { } guid)
-            return guid;
-
-        if (options.DecodeDateTime && TimeDecoder.TryParseDateTime(protoObject, options) is { } dateTime)
-            return dateTime;
-
-        if (options.DecodeTimeSpan && TimeDecoder.TryParseTimeSpan(protoObject, options) is { } timeSpan)
-            return timeSpan;
-
-        if (options.DecodeDecimal && DecimalDecoder.TryParseDecimal(protoObject, options) is { } dec)
-            return dec;
-
-        return protoObject;
+        return ProtoDecoder.Decode(wireObject, decodeOptions);
     }
 }

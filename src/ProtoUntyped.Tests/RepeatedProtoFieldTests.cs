@@ -8,7 +8,7 @@ public class RepeatedProtoFieldTests
     [Fact]
     public void ShouldGetStringFromArray()
     {
-        var protoArray = new RepeatedProtoField(5, new[] { new ProtoValue("Text1", WireType.String), new ProtoValue("Text2", WireType.String) });
+        var protoArray = new RepeatedProtoField(5, WireType.String, new[] { "Text1", "Text2" });
 
         var expectedText = """
             - 5 = array [

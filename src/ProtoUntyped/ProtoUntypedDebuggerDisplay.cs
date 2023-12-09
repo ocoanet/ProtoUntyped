@@ -6,14 +6,19 @@ internal static class ProtoUntypedDebuggerDisplay
     {
         return protoField.Value switch
         {
-            ProtoObject protoObject => $"ProtoObject {{ {GetDebugString(protoObject)} }}",
-            string s                => $"\"{s}\"",
-            _                       => protoField.Value,
+            ProtoObject o => $"Message {{ {GetDebugString(o)} }}",
+            string s      => $"\"{s}\"",
+            _             => protoField.Value,
         };
     }
 
     public static string GetDebugString(ProtoObject protoObject)
     {
         return $"FieldCount = {protoObject.Fields.Count}";
+    }
+    
+    public static string GetDebugString(ProtoWireObject wireObject)
+    {
+        return $"FieldCount = {wireObject.Fields.Count}";
     }
 }

@@ -15,167 +15,133 @@ public partial class ProtoObjectTests
         public void ShouldParseSimpleMessage()
         {
             var message = ThreadLocalFixture.Create<SearchRequest>();
-            var bytes = ProtoBufUtil.Serialize(message);
 
+            var bytes = ProtoBufUtil.Serialize(message);
             var protoObject = ProtoObject.Decode(bytes);
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, message.Query, WireType.String),
-                    new ProtoField(2, (long)message.PageNumber, WireType.Varint),
-                    new ProtoField(3, (long)message.ResultPerPage, WireType.Varint),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.String, message.Query),
+                new(2, WireType.Varint, (long)message.PageNumber),
+                new(3, WireType.Varint, (long)message.ResultPerPage)
+            ));
         }
 
         [Fact]
         public void ShouldParseMessageWithFloats()
         {
             var message = ThreadLocalFixture.Create<MessageWithFloats>();
-            var bytes = ProtoBufUtil.Serialize(message);
 
+            var bytes = ProtoBufUtil.Serialize(message);
             var protoObject = ProtoObject.Decode(bytes);
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, message.DoubleValue, WireType.Fixed64),
-                    new ProtoField(2, message.SingleValue, WireType.Fixed32),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.Fixed64, message.DoubleValue),
+                new(2, WireType.Fixed32, message.SingleValue)
+            ));
         }
 
         [Fact]
         public void ShouldParseMessageWithIntegers()
         {
             var message = ThreadLocalFixture.Create<MessageWithIntegers>();
-            var bytes = ProtoBufUtil.Serialize(message);
 
+            var bytes = ProtoBufUtil.Serialize(message);
             var protoObject = ProtoObject.Decode(bytes);
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, (long)message.Int16Value, WireType.Varint),
-                    new ProtoField(2, (long)message.UInt16Value, WireType.Varint),
-                    new ProtoField(3, (long)message.Int32Value, WireType.Varint),
-                    new ProtoField(4, (long)message.UInt32Value, WireType.Varint),
-                    new ProtoField(5, (long)message.Int64Value, WireType.Varint),
-                    new ProtoField(6, (long)message.UInt64Value, WireType.Varint),
-                    new ProtoField(7, (long)message.ByteValue, WireType.Varint),
-                    new ProtoField(8, (long)message.SByteValue, WireType.Varint),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.Varint, (long)message.Int16Value),
+                new(2, WireType.Varint, (long)message.UInt16Value),
+                new(3, WireType.Varint, (long)message.Int32Value),
+                new(4, WireType.Varint, (long)message.UInt32Value),
+                new(5, WireType.Varint, (long)message.Int64Value),
+                new(6, WireType.Varint, (long)message.UInt64Value),
+                new(7, WireType.Varint, (long)message.ByteValue),
+                new(8, WireType.Varint, (long)message.SByteValue)
+            ));
         }
 
         [Fact]
         public void ShouldParseMessageWithNestedTypes()
         {
             var message = ThreadLocalFixture.Create<MessageWithNestedTypes>();
-            var bytes = ProtoBufUtil.Serialize(message);
 
+            var bytes = ProtoBufUtil.Serialize(message);
             var protoObject = ProtoObject.Decode(bytes);
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, (long)message.Id, WireType.Varint),
-                    new ProtoField(2,
-                                   new ProtoObject
-                                   {
-                                       Fields =
-                                       {
-                                           new ProtoField(1,
-                                                          new ProtoObject
-                                                          {
-                                                              Fields =
-                                                              {
-                                                                  new ProtoField(1, (long)message.Nested1.Nested2.Value1, WireType.Varint),
-                                                                  new ProtoField(2, message.Nested1.Nested2.Value2, WireType.String),
-                                                              }
-                                                          },
-                                                          WireType.String),
-                                       }
-                                   },
-                                   WireType.String),
-                    new ProtoField(3, message.Key, WireType.String),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.Varint, (long)message.Id),
+                new(2, WireType.String, new ProtoObject(
+                    new ProtoField(1, WireType.String, new ProtoObject(
+                        new(1, WireType.Varint, (long)message.Nested1.Nested2.Value1),
+                        new(2, WireType.String, message.Nested1.Nested2.Value2)
+                    ))
+                )),
+                new(3, WireType.String, message.Key)
+            ));
         }
-        
+
         [Fact]
         public void ShouldParseMessageWithGroups()
         {
             var message = ThreadLocalFixture.Create<MessageWithGroups>();
-            var bytes = ProtoBufUtil.Serialize(message);
 
+            var bytes = ProtoBufUtil.Serialize(message);
             var protoObject = ProtoObject.Decode(bytes);
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, (long)message.Id, WireType.Varint),
-                    new ProtoField(2,
-                                   new ProtoObject
-                                   {
-                                       Fields =
-                                       {
-                                           new ProtoField(1,
-                                                          new ProtoObject
-                                                          {
-                                                              Fields =
-                                                              {
-                                                                  new ProtoField(1, (long)message.Nested1.Nested2.Value1, WireType.Varint),
-                                                                  new ProtoField(2, message.Nested1.Nested2.Value2, WireType.String),
-                                                              }
-                                                          },
-                                                          WireType.StartGroup),
-                                       }
-                                   },
-                                   WireType.StartGroup),
-                    new ProtoField(3, message.Key, WireType.String),
-                }
-            });
-            
-            protoObject.Fields[1].IsGroup.ShouldEqual(true);
-            ((ProtoObject)protoObject.Fields[1].Value).Fields[0].IsGroup.ShouldEqual(true);
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.Varint, (long)message.Id),
+                new(2, WireType.StartGroup, new ProtoObject(
+                    new ProtoField(1, WireType.StartGroup, new ProtoObject(
+                        new(1, WireType.Varint, (long)message.Nested1.Nested2.Value1),
+                        new(2, WireType.String, message.Nested1.Nested2.Value2)
+                    ))
+                )),
+                new(3, WireType.String, message.Key)
+            ));
+
+            Assert.Single(protoObject.GetFields(2)).IsGroup.ShouldEqual(true);
+
+            var nestedObject2 = Assert.IsType<ProtoObject>(Assert.Single(protoObject.GetFields(2)).Value);
+            Assert.Single(nestedObject2.GetFields(1)).IsGroup.ShouldEqual(true);
         }
 
         [Fact]
         public void ShouldParseMessageWithArrays()
         {
-            var message = ThreadLocalFixture.Create<MessageWithArrays>();
-            var bytes = ProtoBufUtil.Serialize(message);
+            var message = new MessageWithArrays
+            {
+                Id = 123,
+                Int32Array = new[]
+                {
+                    101,
+                    102,
+                    103,
+                },
+                MessageArray = new[]
+                {
+                    new MessageWithArrays.Nested { Id = 1001, Key = "ABC1" },
+                    new MessageWithArrays.Nested { Id = 1002, Key = "ABC2" },
+                },
+            };
 
+            var bytes = ProtoBufUtil.Serialize(message);
             var protoObject = ProtoObject.Decode(bytes);
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.Varint, (long)message.Id),
+                new RepeatedProtoField(2, WireType.Varint, new[] { 101L, 102L, 103L }),
+                new RepeatedProtoField(3, WireType.String, new[]
                 {
-                    new ProtoField(1, (long)message.Id, WireType.Varint),
-                    new RepeatedProtoField(2, message.Int32Array.Select(x => new ProtoValue((long)x, WireType.Varint)).ToArray()),
-                    new RepeatedProtoField(3, message.MessageArray.Select(x => new ProtoValue(ToProtoObject(x), WireType.String)).ToArray()),
-                }
-            });
-
-            static ProtoObject ToProtoObject(MessageWithArrays.Nested nested)
-            {
-                return new ProtoObject
-                {
-                    Fields =
-                    {
-                        new ProtoField(1, (long)nested.Id, WireType.Varint),
-                        new ProtoField(2, nested.Key, WireType.String),
-                    }
-                };
-            }
+                    new ProtoObject(
+                        new(1, WireType.Varint, 1001L),
+                        new(2, WireType.String, "ABC1")
+                    ),
+                    new ProtoObject(
+                        new(1, WireType.Varint, 1002L),
+                        new(2, WireType.String, "ABC2")
+                    ),
+                })
+            ));
         }
 
         [Theory]
@@ -191,17 +157,12 @@ public partial class ProtoObjectTests
             };
 
             var bytes = ProtoBufUtil.Serialize(message);
-
             var protoObject = ProtoObject.Decode(bytes);
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, (long)message.Id, WireType.Varint),
-                    new ProtoField(2, message.Data, WireType.String),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.Varint, (long)message.Id),
+                new(2, WireType.String, message.Data)
+            ));
         }
 
         [Theory]
@@ -224,14 +185,10 @@ public partial class ProtoObjectTests
 
             var protoObject = ProtoObject.Decode(bytes);
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, (long)message.Id, WireType.Varint),
-                    new ProtoField(2, message.Data, WireType.String),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.Varint, (long)message.Id),
+                new(2, WireType.String, message.Data)
+            ));
         }
 
         [Fact]
@@ -257,13 +214,9 @@ public partial class ProtoObjectTests
 
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeGuid = true });
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, message.Guid, WireType.String),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new ProtoField(1, WireType.String, message.Guid)
+            ));
         }
 
         [Theory]
@@ -282,13 +235,9 @@ public partial class ProtoObjectTests
 
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, message.Timestamp, WireType.String),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new ProtoField(1, WireType.String, message.Timestamp)
+            ));
         }
 
         [Theory]
@@ -305,13 +254,9 @@ public partial class ProtoObjectTests
 
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, message.Duration, WireType.String),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new ProtoField(1, WireType.String, message.Duration)
+            ));
         }
 
         [Theory]
@@ -327,13 +272,9 @@ public partial class ProtoObjectTests
 
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDecimal = true });
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, message.Value, WireType.String),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new ProtoField(1, WireType.String, message.Value)
+            ));
         }
 
         [Theory]
@@ -345,13 +286,9 @@ public partial class ProtoObjectTests
 
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { EmptyStringDecodingMode = decodingMode });
 
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(2, expectedValue, WireType.String),
-                }
-            });
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new ProtoField(2, WireType.String, expectedValue)
+            ));
         }
 
         public static IEnumerable<object[]> ShouldDecodeEmptyBytesUsingSpecifiedDecodingModeData
@@ -360,7 +297,7 @@ public partial class ProtoObjectTests
             {
                 yield return new object[] { StringWireTypeDecodingMode.Bytes, Array.Empty<byte>() };
                 yield return new object[] { StringWireTypeDecodingMode.String, "" };
-                yield return new object[] { StringWireTypeDecodingMode.EmbeddedMessage, new ProtoObject() };
+                yield return new object[] { StringWireTypeDecodingMode.EmbeddedMessage, ProtoObject.Empty };
             }
         }
 
@@ -374,6 +311,38 @@ public partial class ProtoObjectTests
             {
                 ProtoObject.Decode(bytes, new ProtoDecodeOptions { EmptyStringDecodingMode = decodingMode });
             }
+        }
+
+        [Fact]
+        public void ShouldDecodeFixed32AsInt32()
+        {
+            var message = ThreadLocalFixture.Create<MessageWithFixedInt32>();
+
+            var bytes = ProtoBufUtil.Serialize(message);
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { Fixed32DecodingMode = FixedWireTypeDecodingMode.Integer });
+            
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.Varint, (long)message.Id),
+                new(2, WireType.Fixed32, message.FixedValue),
+                new(3, WireType.Varint, (long)message.Value),
+                new(4, WireType.Fixed64, message.DoubleValue)
+            ));
+        }
+        
+        [Fact]
+        public void ShouldDecodeFixed64AsInt64()
+        {
+            var message = ThreadLocalFixture.Create<MessageWithFixedInt64>();
+
+            var bytes = ProtoBufUtil.Serialize(message);
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { Fixed64DecodingMode = FixedWireTypeDecodingMode.Integer });
+            
+            protoObject.ShouldDeepEqual(new ProtoObject(
+                new(1, WireType.Varint, (long)message.Id),
+                new(2, WireType.Fixed64, message.FixedValue),
+                new(3, WireType.Varint, message.Value),
+                new(4, WireType.Fixed32, message.SingleValue)
+            ));
         }
     }
 }

@@ -13,5 +13,5 @@ internal class RepeatedProtoFieldDebugView
     }
     
     [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-    public object[] Items => _repeatedProtoField.Elements.Select(x => x.Value).ToArray();
+    public object[] Items => _repeatedProtoField.GetValues().ToArray();
 }

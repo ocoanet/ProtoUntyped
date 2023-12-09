@@ -1,5 +1,5 @@
 using System;
-using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ProtoBuf;
 
@@ -7,22 +7,19 @@ namespace ProtoUntyped.Decoders;
 
 internal static class GuidDecoder
 {
-    public static Guid? TryParseGuid(ProtoObject protoObject, ProtoDecodeOptions options)
+    public static Guid? TryParseGuid(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
     {
-        if (protoObject.Fields.Count is not 2)
+        if (fields.Count is not 2)
             return null;
 
-        if (protoObject.Fields[0] is not ProtoField field1 || field1.FieldNumber != 1 || field1.WireType != WireType.Fixed64)
+        if (fields[0] is not { } field1 || field1.FieldNumber != 1 || field1.WireType != WireType.Fixed64)
             return null;
 
-        if (protoObject.Fields[1] is not ProtoField field2 || field2.FieldNumber != 2 || field2.WireType != WireType.Fixed64)
+        if (fields[1] is not { } field2 || field2.FieldNumber != 2 || field2.WireType != WireType.Fixed64)
             return null;
-
-        var lowAsDouble = (double)field1.Value;
-        var low = Unsafe.As<double, ulong>(ref lowAsDouble);
-
-        var highAsDouble = (double)field2.Value;
-        var high = Unsafe.As<double, ulong>(ref highAsDouble);
+        
+        var low = (ulong)field1.Value.Int64Value;
+        var high = (ulong)field2.Value.Int64Value;
 
         var guidAccessor = new GuidAccessor(low, high);
         var isValid = options.GuidValidator.Invoke((guidAccessor.Guid, guidAccessor.Version));

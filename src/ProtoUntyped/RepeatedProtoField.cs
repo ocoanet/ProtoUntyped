@@ -7,16 +7,28 @@ using ProtoBuf;
 namespace ProtoUntyped;
 
 [DebuggerTypeProxy(typeof(RepeatedProtoFieldDebugView))]
-[DebuggerDisplay("FieldNumber = {FieldNumber}, Length = {Elements.Length}")]
+[DebuggerDisplay("FieldNumber = {FieldNumber}, Length = {Fields.Count}")]
 public class RepeatedProtoField : ProtoField
 {
-    public RepeatedProtoField(int fieldNumber, ProtoValue[] elements)
-        : base(fieldNumber, ComputeValue(elements), ComputeWireType(elements))
+    public RepeatedProtoField(ProtoField[] fields)
+        : base(GetFieldNumber(fields), ComputeWireType(fields), ComputeValue(fields))
     {
-        Elements = elements;
+        Fields = fields;
+    }
+    
+    public RepeatedProtoField(int fieldNumber, WireType wireType, Array values)
+        : base(fieldNumber, wireType, values)
+    {
+        Fields = values.Cast<object>().Select(x => new ProtoField(fieldNumber, wireType, x)).ToArray();
     }
 
-    public ProtoValue[] Elements { get; }
+    internal RepeatedProtoField(int fieldNumber, ProtoField[] fields)
+        : base(fieldNumber, ComputeWireType(fields), ComputeValue(fields))
+    {
+        Fields = fields;
+    }
+
+    public IReadOnlyList<ProtoField> Fields { get; }
 
     public override string ToString()
     {
@@ -28,27 +40,43 @@ public class RepeatedProtoField : ProtoField
         return formatter.BuildString(this);
     }
 
-    public override IEnumerable<ProtoValue> GetProtoValues()
+    public override IEnumerable<object> GetValues()
     {
-        return Elements;
+        return Fields.Select(x => x.Value);
+    }
+    
+    private static int GetFieldNumber(ProtoField[] fields)
+    {
+        if (fields.Length == 0)
+            throw new ArgumentException("fields cannot be empty");
+
+        var fieldNumber = fields[0].FieldNumber;
+
+        for (int i = 1; i < fields.Length; i++)
+        {
+            if (fields[i].FieldNumber != fieldNumber)
+                throw new ArgumentException("fields must have the same field number");
+        }
+
+        return fieldNumber;
     }
 
-    private static object ComputeValue(ProtoValue[] items)
+    private static object ComputeValue(ProtoField[] fields)
     {
-        var types = items.Select(x => x.Value.GetType()).Distinct().ToList();
-        var value = types.Count == 1 ? Array.CreateInstance(types[0], items.Length) : new object[items.Length];
+        var types = fields.Select(x => x.Value.GetType()).Distinct().ToList();
+        var value = types.Count == 1 ? Array.CreateInstance(types[0], fields.Length) : new object[fields.Length];
 
-        for (var i = 0; i < items.Length; i++)
+        for (var i = 0; i < fields.Length; i++)
         {
-            value.SetValue(items[i].Value, i);
+            value.SetValue(fields[i].Value, i);
         }
-            
+        
         return value;
     }
     
-    private static WireType ComputeWireType(ProtoValue[] elements)
+    private static WireType ComputeWireType(ProtoField[] fields)
     {
-        var wireTypes = elements.Select(x => x.WireType).Distinct().ToList();
+        var wireTypes = fields.Select(x => x.WireType).Distinct().ToList();
         
         return wireTypes.Count == 1 ? wireTypes[0] : WireType.None;
     }

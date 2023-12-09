@@ -153,14 +153,6 @@ partial class ProtoObjectTests
                 """;
 
             protoObject.ToString().ShouldEqual(expectedText);
-
-            protoObject.ShouldDeepEqual(new ProtoObject
-            {
-                Fields =
-                {
-                    new ProtoField(1, message.Timestamp, WireType.String),
-                }
-            });
         }
 
         [Theory]

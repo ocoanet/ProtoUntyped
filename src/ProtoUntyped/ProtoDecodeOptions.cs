@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProtoBuf;
 
 namespace ProtoUntyped;
 
@@ -20,12 +21,12 @@ public class ProtoDecodeOptions
     /// You can use <see cref="GuidValidator"/> to reject incorrect values.
     /// </remarks>
     public bool DecodeGuid { get; set; }
-        
+
     /// <summary>
     /// Specify the delegate that will used to identify valid <see cref="Guid"/> values.
     /// </summary>
     public Func<(Guid Guid, byte Version), bool> GuidValidator { get; set; } = DefaultGuidValidator;
-        
+
     /// <summary>
     /// Enable <see cref="DateTime"/> decoding (using protobuf-net format).
     /// </summary>
@@ -56,12 +57,12 @@ public class ProtoDecodeOptions
     /// You can use <see cref="DateTimeValidator"/> to reject incorrect values.
     /// </remarks>
     public bool DecodeDateTime { get; set; }
-        
+
     /// <summary>
     /// Specify the delegate that will used to identify valid <see cref="DateTime"/> values.
     /// </summary>
     public Func<DateTime, bool> DateTimeValidator { get; set; } = DefaultDateTimeValidator;
-        
+
     /// <summary>
     /// Enable <see cref="TimeSpan"/> decoding (using protobuf-net format).
     /// </summary>
@@ -86,12 +87,12 @@ public class ProtoDecodeOptions
     /// You can use <see cref="TimeSpanValidator"/> to reject incorrect values.
     /// </remarks>
     public bool DecodeTimeSpan { get; set; }
-        
+
     /// <summary>
     /// Specify the delegate that will used to identify valid <see cref="TimeSpan"/> values.
     /// </summary>
     public Func<TimeSpan, bool> TimeSpanValidator { get; set; } = DefaultTimeSpanValidator;
-        
+
     /// <summary>
     /// Enable <see cref="decimal"/> decoding (using protobuf-net format).
     /// </summary>
@@ -108,13 +109,13 @@ public class ProtoDecodeOptions
     /// You can use <see cref="DecimalValidator"/> to reject incorrect values.
     /// </remarks>
     public bool DecodeDecimal { get; set; }
-        
+
     /// <summary>
     /// Specify the delegate that will used to identify valid <see cref="decimal"/> values.
     /// </summary>
     public Func<decimal, bool> DecimalValidator { get; set; } = DefaultDecimalValidator;
-        
-        
+
+
     /// <summary>
     /// Specify the delegate that will used to identify valid <see cref="String"/> values.
     /// </summary>
@@ -128,6 +129,16 @@ public class ProtoDecodeOptions
     /// </remarks>
     public StringWireTypeDecodingMode EmptyStringDecodingMode { get; set; }
 
+    /// <summary>
+    /// Specifies how the <see cref="WireType.Fixed32"/> wire type should be decoded.
+    /// </summary>
+    public FixedWireTypeDecodingMode Fixed32DecodingMode { get; set; }
+
+    /// <summary>
+    /// Specifies how the <see cref="WireType.Fixed64"/> wire type should be decoded.
+    /// </summary>
+    public FixedWireTypeDecodingMode Fixed64DecodingMode { get; set; }
+
     public static bool DefaultGuidValidator((Guid Guid, byte Version) value)
     {
         return value.Version is >= 1 and <= 5;
@@ -137,19 +148,19 @@ public class ProtoDecodeOptions
     {
         return value >= DateTime.Today.AddYears(-30) && value <= DateTime.Today.AddYears(20) && value.Kind == DateTimeKind.Unspecified;
     }
-        
+
     public static bool DefaultTimeSpanValidator(TimeSpan value)
     {
         return value <= TimeSpan.FromDays(60);
     }
 
     public static ReadOnlySpan<byte> DefaultStringValidatorInvalidBytes => new byte[] { 0, 1, 2, 3, 4, 5, 6 };
-        
+
     public static bool DefaultStringValidator(Memory<byte> value)
     {
         return value.Span.IndexOfAny(DefaultStringValidatorInvalidBytes) == -1;
     }
-        
+
     public static bool DefaultDecimalValidator(decimal value)
     {
         return true;

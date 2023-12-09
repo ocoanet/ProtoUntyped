@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ProtoBuf;
 
@@ -8,48 +9,50 @@ internal static class TimeDecoder
 {
     private static readonly DateTime _epoch = new DateTime(1970, 1, 1);
 
-    public static DateTime? TryParseDateTime(ProtoObject protoObject, ProtoDecodeOptions options)
+    public static DateTime? TryParseDateTime(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
     {
-        if (TryParseScaledTicks(protoObject) is not { } ticks || ticks.ToDateTime() is not { } dateTime)
+        if (TryParseScaledTicks(fields) is not { } ticks || ticks.ToDateTime() is not { } dateTime)
             return null;
 
         return options.DateTimeValidator.Invoke(dateTime) ? dateTime : null;
     }
 
-    public static TimeSpan? TryParseTimeSpan(ProtoObject protoObject, ProtoDecodeOptions options)
+    public static TimeSpan? TryParseTimeSpan(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
     {
-        if (protoObject.Fields.Any(x => x.FieldNumber == 3)) // Kind should not be specified for TimeSpan
+        if (fields.Any(x => x.FieldNumber == 3)) // Kind should not be specified for TimeSpan
             return null;
             
-        if (TryParseScaledTicks(protoObject) is not { } ticks || ticks.ToTimeSpan() is not { } timeSpan)
+        if (TryParseScaledTicks(fields) is not { } ticks || ticks.ToTimeSpan() is not { } timeSpan)
             return null;
 
         return options.TimeSpanValidator.Invoke(timeSpan) ? timeSpan : null;
     }
 
-    private static ScaledTicks? TryParseScaledTicks(ProtoObject protoObject)
+    private static ScaledTicks? TryParseScaledTicks(IReadOnlyList<ProtoWireField> fields)
     {
-        if (protoObject.Fields.Count is 0 or > 3)
+        if (fields.Count is 0 or > 3)
             return null;
 
         var ticks = new ScaledTicks();
 
-        foreach (var member in protoObject.Fields)
+        foreach (var member in fields)
         {
-            if (member.Value is not long value)
+            if (member.Value.Type != ProtoWireValueType.Int64)
                 return null;
+
+            var value = member.Value.Int64Value;
                 
             switch (member)
             {
-                case ProtoField { FieldNumber: 1, WireType: WireType.Varint }:
+                case { FieldNumber: 1, WireType: WireType.Varint }:
                     ticks.Value = Zag(value);
                     break;
                     
-                case ProtoField { FieldNumber: 2, WireType: WireType.Varint }:
+                case { FieldNumber: 2, WireType: WireType.Varint }:
                     ticks.Scale = (TimeSpanScale)value;
                     break;
                     
-                case ProtoField { FieldNumber: 3, WireType: WireType.Varint }:
+                case { FieldNumber: 3, WireType: WireType.Varint }:
                     ticks.Kind = (DateTimeKind)value;
                     break;
                     
