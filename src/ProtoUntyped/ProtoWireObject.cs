@@ -61,4 +61,9 @@ public class ProtoWireObject
     {
         return ProtoDecoder.Decode(this, decodeOptions);
     }
+
+    public string ToProtoscopeString()
+    {
+        return ProtoscopeFormatter.Default.BuildString(this);
+    }
 }

@@ -52,7 +52,7 @@ public readonly struct ProtoWireValue
     
     public byte[] BytesValue => _type == ProtoWireValueType.Bytes ? _bytesValue! : Array.Empty<byte>();
     
-    public ProtoWireObject Message => _type == ProtoWireValueType.Message ? _message! : ProtoWireObject.Empty;
+    public ProtoWireObject MessageValue => _type == ProtoWireValueType.Message ? _message! : ProtoWireObject.Empty;
 
     public int Int32Value => _type == ProtoWireValueType.Int32 ? _int32Value : default;
 
@@ -65,7 +65,7 @@ public readonly struct ProtoWireValue
             ProtoWireValueType.Bytes   => BytesValue,
             ProtoWireValueType.Int32   => Int32Value,
             ProtoWireValueType.Int64   => Int64Value,
-            ProtoWireValueType.Message => Message,
+            ProtoWireValueType.Message => MessageValue,
             ProtoWireValueType.String  => StringValue,
             _                          => throw new NotSupportedException($"Unknown value type {_type}"),
         };

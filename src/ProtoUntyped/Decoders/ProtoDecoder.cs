@@ -138,7 +138,7 @@ internal static class ProtoDecoder
     
     private static object DecodeMessageValue(ProtoWireField wireField, ProtoDecodeOptions decodeOptions)
     {
-        var messageFields = wireField.Value.Message.Fields;
+        var messageFields = wireField.Value.MessageValue.Fields;
         
         if (decodeOptions.DecodeGuid && GuidDecoder.TryParseGuid(messageFields, decodeOptions) is { } guid)
             return guid;
