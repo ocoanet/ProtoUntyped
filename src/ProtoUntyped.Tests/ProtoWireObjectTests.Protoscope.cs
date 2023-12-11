@@ -1,4 +1,5 @@
 ﻿using System;
+using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
 
@@ -77,6 +78,22 @@ public partial class ProtoWireObjectTests
                 $$"""
                 1: {{message.Id}}
                 2: {`{{Convert.ToHexString(data).ToLower()}}`}
+
+                """;
+
+            obj.ToProtoscopeString().ShouldEqual(expectedText);
+        }
+        
+        [Fact]
+        public void ShouldGetProtoscopeStringForEmptyGroup()
+        {
+            var obj = new ProtoWireObject(
+                new ProtoWireField(1, WireType.StartGroup, new ProtoWireObject())
+            );
+
+            var expectedText =
+                """
+                1: !{}
 
                 """;
 

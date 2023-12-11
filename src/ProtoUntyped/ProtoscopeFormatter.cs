@@ -114,7 +114,6 @@ public class ProtoscopeFormatter
         if (obj.Fields.Count == 0)
         {
             stringBuilder.Append("{}");
-            stringBuilder.AppendLine();
             return;
         }
 
