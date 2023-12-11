@@ -62,7 +62,7 @@ public class TestDataValidationTests
     public static IEnumerable<object[]> ConvertibleProtoscopeBinaryFilesData
         => GetProtoscopeBinaryFilePaths().Where(x => x.HasProtoscopeFile()).Select(x => new object[] { x });
 
-    [Fact]
+    [Fact(Skip = "Manual test")]
     public void GenerateProtoscope()
     {
         var filePath = Path.Combine(AppContext.BaseDirectory, "Protoscope", "TestData", "message.pb");;
