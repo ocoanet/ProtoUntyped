@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using ProtoBuf;
 
 namespace ProtoUntyped;
@@ -115,11 +116,18 @@ public class ProtoDecodeOptions
     /// </summary>
     public Func<decimal, bool> DecimalValidator { get; set; } = DefaultDecimalValidator;
 
-
     /// <summary>
     /// Specify the delegate that will used to identify valid <see cref="String"/> values.
     /// </summary>
     public Func<Memory<byte>, bool> StringValidator { get; set; } = DefaultStringValidator;
+    
+    /// <summary>
+    /// Specify the delegate that will used to identify valid embedded messages.
+    /// </summary>
+    /// <remarks>
+    /// The bytes must also be a valid protobuf message.
+    /// </remarks>
+    public Func<Memory<byte>, bool> EmbeddedMessageValidator { get; set; } = DefaultEmbeddedMessageValidator;
 
     /// <summary>
     /// Specify how empty strings should are decoded.
@@ -159,6 +167,25 @@ public class ProtoDecodeOptions
     public static bool DefaultStringValidator(Memory<byte> value)
     {
         return value.Span.IndexOfAny(DefaultStringValidatorInvalidBytes) == -1;
+    }
+    
+    public static bool DefaultEmbeddedMessageValidator(Memory<byte> value)
+    {
+        var span = value.Span;
+        
+        // Many two digits ASCII strings are valid embedded messages.
+        // Although they could theoretically be embedded messages,
+        // the probability that they are strings is higher.
+        
+        if (span.Length == 2)
+            return !(IsAsciiLetterOrDigit(span[0]) && IsAsciiLetterOrDigit(span[1]));
+
+        return true;
+
+        static bool IsAsciiLetterOrDigit(byte b)
+        {
+            return b >= 'a' && b <= 'z' || b >= 'A' && b <= 'Z' || b >= '0' && b <= '9';
+        }
     }
 
     public static bool DefaultDecimalValidator(decimal value)

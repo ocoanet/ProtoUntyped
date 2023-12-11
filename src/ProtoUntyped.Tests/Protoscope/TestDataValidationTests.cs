@@ -28,7 +28,7 @@ public class TestDataValidationTests
     public void ShouldDecodeProtoscopeBinaryFile(TestDataPath filePath)
     {
         var data = File.ReadAllBytes(filePath.Value);
-        var decodeOptions = new ProtoDecodeOptions { EmbeddedMessageValidator = x => true };
+        var decodeOptions = new ProtoDecodeOptions();
 
         var succeeded = ProtoObject.TryDecode(data, decodeOptions, out _);
 
@@ -49,7 +49,7 @@ public class TestDataValidationTests
     public void ShouldGenerateProtoscopeString(TestDataPath filePath)
     {
         var data = File.ReadAllBytes(filePath.Value);
-        var decodeOptions = new ProtoDecodeOptions { EmbeddedMessageValidator = x => true };
+        var decodeOptions = new ProtoDecodeOptions();
 
         var obj = ProtoWireObject.Decode(data, decodeOptions);
 
@@ -63,11 +63,12 @@ public class TestDataValidationTests
         => GetProtoscopeBinaryFilePaths().Where(x => x.HasProtoscopeFile()).Select(x => new object[] { x });
 
     [Fact(Skip = "Manual test")]
+    // [Fact]
     public void GenerateProtoscope()
     {
         var filePath = Path.Combine(AppContext.BaseDirectory, "Protoscope", "TestData", "message.pb");;
         var data = File.ReadAllBytes(filePath);
-        var decodeOptions = new ProtoDecodeOptions { EmbeddedMessageValidator = x => true };
+        var decodeOptions = new ProtoDecodeOptions();
 
         var obj = ProtoWireObject.Decode(data, decodeOptions);
 

@@ -108,8 +108,8 @@ internal static class ProtoWireDecoder
         if (bytes.Length == 0)
             return DecodeEmptyString(options);
 
-        if (TryReadEmbeddedMessage(bytes, options) is { } embeddedMessage)
-            return embeddedMessage;
+        if (options.EmbeddedMessageValidator.Invoke(bytes) && TryReadEmbeddedMessage(bytes, options, out var embeddedMessage))
+            return new ProtoWireValue(embeddedMessage!);
 
         if (!options.StringValidator.Invoke(bytes))
             return new ProtoWireValue(bytes);
@@ -135,19 +135,22 @@ internal static class ProtoWireDecoder
         };
     }
 
-    private static ProtoWireValue? TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options)
+    private static bool TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options, out ProtoWireObject? embeddedMessage)
     {
-        if (!ProtoDecoder.HasValidFieldHeader(bytes))
-            // Avoids exceptions when the bytes do not start with a valid field header.
-            return null;
-
         try
         {
-            return TryReadFields(bytes, options, out var fields) ? new ProtoWireValue(new ProtoWireObject(fields)) : null;
+            if (ProtoDecoder.HasValidFieldHeader(bytes) && TryReadFields(bytes, options, out var fields))
+            {
+                embeddedMessage = new ProtoWireObject(fields);
+                return true;
+            }
         }
-        catch (Exception)
+        catch
         {
-            return null;
+            // TryReadFields can throw if the bytes are not a valid message.
         }
+
+        embeddedMessage = null;
+        return false;
     }   
 }

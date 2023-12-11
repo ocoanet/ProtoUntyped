@@ -4,6 +4,7 @@ using System.Linq;
 using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
+using Xunit.Sdk;
 
 namespace ProtoUntyped.Tests;
 
@@ -343,6 +344,46 @@ public partial class ProtoObjectTests
                 new(3, WireType.Varint, message.Value),
                 new(4, WireType.Fixed32, message.SingleValue)
             ));
+        }
+
+        [Fact]
+        public void ShouldDecodeSmallAsciiStringAsString()
+        {
+            // REM: using theory with so many inputs would make the IDE hang.
+            
+            foreach (var s in GetSmallAsciiStrings())
+            {
+                var message = new MessageWithString { Data = s };
+
+                var bytes = ProtoBufUtil.Serialize(message);
+                var protoObject = ProtoObject.Decode(bytes);
+
+                var expectedProtoObject = new ProtoObject(new ProtoField(2, WireType.String, s));
+                if (!protoObject.DeepEquals(expectedProtoObject))
+                    throw new XunitException($"Invalid object for string [{s}]");
+            }
+        }
+
+        private static IEnumerable<string> GetSmallAsciiStrings()
+        {
+            const string asciiChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            
+            foreach (var c1 in asciiChars)
+            {
+                yield return c1.ToString();
+                
+                foreach (var c2 in asciiChars)
+                {
+                    yield return c1.ToString() + c2;
+                    
+#if !DEBUG
+                    foreach (var c3 in AsciiChars)
+                    {
+                        yield return c1.ToString() + c2 + c3;
+                    }
+#endif
+                }
+            }
         }
     }
 }

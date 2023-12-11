@@ -24,14 +24,25 @@ public static class TestExtensions
         
     public static void ShouldDeepEqual<T>(this T actual, T expected)
     {
+        var result = GetComparisonResult(actual, expected);
+        Assert.True(result.AreEqual, "Objects are not equal: " + result.DifferencesString);
+    }
+    
+    public static bool DeepEquals<T>(this T actual, T expected)
+    {
+        var result = GetComparisonResult(actual, expected);
+        return result.AreEqual;
+    }
+
+    private static ComparisonResult GetComparisonResult<T>(T actual, T expected)
+    {
         var comparer = new CompareLogic(new ComparisonConfig());
         comparer.Config.CustomComparers.Add(new EquatableComparer<DateTime>());
         comparer.Config.CustomComparers.Add(new EquatableComparer<TimeSpan>());
 
-        var result = comparer.Compare(expected, actual);
-        Assert.True(result.AreEqual, "Objects are not equal: " + result.DifferencesString);
+        return comparer.Compare(expected, actual);
     }
-        
+
     private class EquatableComparer<T> : BaseTypeComparer
         where T : IEquatable<T>
     {
