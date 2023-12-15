@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using ProtoBuf;
 using ProtoUntyped.Decoders;
@@ -65,5 +67,23 @@ public class ProtoWireObject
     public string ToProtoscopeString()
     {
         return ProtoscopeFormatter.Default.BuildString(this);
+    }
+
+    public void EncodeTo(Stream stream)
+    {
+        ProtoWireEncoder.Encode(stream, this);
+    }
+    
+    public void EncodeTo(IBufferWriter<byte> bufferWriter)
+    {
+        ProtoWireEncoder.Encode(bufferWriter, this);
+    }
+
+    public Span<byte> Encode()
+    {
+        using var stream = new MemoryStream();
+        EncodeTo(stream);
+
+        return stream.GetBuffer().AsSpan(0, (int)stream.Length);
     }
 }

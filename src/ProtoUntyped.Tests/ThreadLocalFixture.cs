@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using System.Threading;
 using AutoFixture;
+using AutoFixture.Kernel;
 
 namespace ProtoUntyped.Tests;
 
@@ -12,4 +14,5 @@ public static class ThreadLocalFixture
 
     public static T Create<T>() => Instance.Create<T>();
     public static T[] CreateMany<T>(int count) => Instance.CreateMany<T>(count).ToArray();
+    public static object Create(Type type) => new SpecimenContext(Instance).Resolve(type);
 }

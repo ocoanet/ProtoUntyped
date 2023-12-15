@@ -26,9 +26,9 @@ internal static class ProtoWireDecoder
         return false;
     }
 
-    private static bool TryReadFields(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out List<ProtoWireField> rawFields)
+    private static bool TryReadFields(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out List<ProtoWireField> wireFields)
     {
-        rawFields = new List<ProtoWireField>();
+        wireFields = new List<ProtoWireField>();
 
         var reader = ProtoReader.State.Create(data, null);
         while (reader.ReadFieldHeader() != 0)
@@ -36,7 +36,7 @@ internal static class ProtoWireDecoder
             if (!TryReadField(ref reader, options, out var field))
                 return false;
 
-            rawFields.Add(field!);
+            wireFields.Add(field!);
         }
 
         return true;
