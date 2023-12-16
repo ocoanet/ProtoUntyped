@@ -58,11 +58,73 @@ public partial class ProtoWireObjectTests
         public void ShouldEncodeMessage(object message)
         {
             var bytes = ProtoBufUtil.Serialize(message);
-
             var wireObject = ProtoWireObject.Decode(bytes);
-            var encodedBytes = wireObject.Encode().ToArray();
 
+            var canBeEncoded = wireObject.CanBeEncoded();
+            canBeEncoded.ShouldEqual(true);
+
+            var encodedBytes = wireObject.Encode().ToArray();
             encodedBytes.ShouldEqual(bytes);
+        }
+
+        [Theory]
+        [MemberData(nameof(GetInvalidWireFieldsData))]
+        public void ShouldNotEncodeInvalidWireField(ProtoWireField wireField)
+        {
+            var wireObject = new ProtoWireObject(wireField);
+
+            var canBeEncoded = wireObject.CanBeEncoded();
+
+            canBeEncoded.ShouldEqual(false);
+        }
+
+        public static IEnumerable<object[]> GetInvalidWireFieldsData()
+        {
+            // Invalid field number
+            yield return new object[] { new ProtoWireField(-1, 1) };
+            yield return new object[] { new ProtoWireField(0, 1) };
+            // Invalid wire type for Int32
+            var int32Value = new ProtoWireValue(1);
+            yield return new object[] { new ProtoWireField(1, int32Value, WireType.None) };
+            yield return new object[] { new ProtoWireField(1, int32Value, WireType.String) };
+            yield return new object[] { new ProtoWireField(1, int32Value, WireType.StartGroup) };
+            yield return new object[] { new ProtoWireField(1, int32Value, WireType.EndGroup) };
+            // Invalid wire type for Int64
+            var int64Value = new ProtoWireValue(1L);
+            yield return new object[] { new ProtoWireField(1, int64Value, WireType.None) };
+            yield return new object[] { new ProtoWireField(1, int64Value, WireType.String) };
+            yield return new object[] { new ProtoWireField(1, int64Value, WireType.StartGroup) };
+            yield return new object[] { new ProtoWireField(1, int64Value, WireType.EndGroup) };
+            yield return new object[] { new ProtoWireField(1, int64Value, WireType.Fixed32) };
+            // Invalid wire type for String
+            var stringValue = new ProtoWireValue("X");
+            yield return new object[] { new ProtoWireField(1, stringValue, WireType.None) };
+            yield return new object[] { new ProtoWireField(1, stringValue, WireType.Varint) };
+            yield return new object[] { new ProtoWireField(1, stringValue, WireType.SignedVarint) };
+            yield return new object[] { new ProtoWireField(1, stringValue, WireType.StartGroup) };
+            yield return new object[] { new ProtoWireField(1, stringValue, WireType.EndGroup) };
+            yield return new object[] { new ProtoWireField(1, stringValue, WireType.Fixed32) };
+            yield return new object[] { new ProtoWireField(1, stringValue, WireType.Fixed64) };
+            // Invalid wire type for Bytes
+            var byteValue = new ProtoWireValue(new byte[] { 0, 1 });
+            yield return new object[] { new ProtoWireField(1, byteValue, WireType.None) };
+            yield return new object[] { new ProtoWireField(1, byteValue, WireType.Varint) };
+            yield return new object[] { new ProtoWireField(1, byteValue, WireType.SignedVarint) };
+            yield return new object[] { new ProtoWireField(1, byteValue, WireType.StartGroup) };
+            yield return new object[] { new ProtoWireField(1, byteValue, WireType.EndGroup) };
+            yield return new object[] { new ProtoWireField(1, byteValue, WireType.Fixed32) };
+            yield return new object[] { new ProtoWireField(1, byteValue, WireType.Fixed64) };
+            // Invalid wire type for Message
+            var messageValue = new ProtoWireValue(new ProtoWireObject());
+            yield return new object[] { new ProtoWireField(1, messageValue, WireType.None) };
+            yield return new object[] { new ProtoWireField(1, messageValue, WireType.Varint) };
+            yield return new object[] { new ProtoWireField(1, messageValue, WireType.SignedVarint) };
+            yield return new object[] { new ProtoWireField(1, messageValue, WireType.EndGroup) };
+            yield return new object[] { new ProtoWireField(1, messageValue, WireType.Fixed32) };
+            yield return new object[] { new ProtoWireField(1, messageValue, WireType.Fixed64) };
+            // Invalid nested field for Message
+            var invalidMessageValue = new ProtoWireValue(new ProtoWireObject(new ProtoWireField(-1, 1)));
+            yield return new object[] { new ProtoWireField(1, invalidMessageValue, WireType.String) };
         }
 
         public static IEnumerable<object[]> CreateMessagesData()

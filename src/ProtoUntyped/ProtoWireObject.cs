@@ -86,4 +86,9 @@ public class ProtoWireObject
 
         return stream.GetBuffer().AsSpan(0, (int)stream.Length);
     }
+
+    public bool CanBeEncoded()
+    {
+        return ProtoWireEncoder.CanBeEncoded(this);
+    }
 }

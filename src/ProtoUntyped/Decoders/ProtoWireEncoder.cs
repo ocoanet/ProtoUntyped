@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using ProtoBuf;
 using ProtoBuf.Serializers;
 
@@ -9,6 +10,38 @@ namespace ProtoUntyped.Decoders;
 
 internal static class ProtoWireEncoder
 {
+    public static bool CanBeEncoded(ProtoWireObject wireObject)
+    {
+        return wireObject.Fields.All(IsEncodingSupported);
+    }
+    
+    public static bool IsEncodingSupported(ProtoWireField wireField)
+    {
+        if (wireField.FieldNumber <= 0)
+            return false;
+        
+        switch (wireField.WireType)
+        {
+            case WireType.Varint when wireField.Value.Type == ProtoWireValueType.Int32:
+            case WireType.Varint when wireField.Value.Type == ProtoWireValueType.Int64:
+            case WireType.Fixed32 when wireField.Value.Type == ProtoWireValueType.Int32:
+            case WireType.Fixed64 when wireField.Value.Type == ProtoWireValueType.Int32:
+            case WireType.Fixed64 when wireField.Value.Type == ProtoWireValueType.Int64:
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.String:
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Bytes:
+            case WireType.SignedVarint when wireField.Value.Type == ProtoWireValueType.Int32:
+            case WireType.SignedVarint when wireField.Value.Type == ProtoWireValueType.Int64:
+                return true;
+            
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Message:
+            case WireType.StartGroup when wireField.Value.Type == ProtoWireValueType.Message:
+                return CanBeEncoded(wireField.Value.MessageValue);
+
+            default:
+                return false;
+        }
+    }
+    
     public static void Encode(IBufferWriter<byte> bufferWriter, ProtoWireObject wireObject)
     {
         var writer = ProtoWriter.State.Create(bufferWriter, null);
@@ -75,7 +108,7 @@ internal static class ProtoWireEncoder
                 writer.WriteMessage(default, wireField.Value.MessageValue, WireObjectSerializer.Instance);
                 break;
             
-            case WireType.StartGroup:
+            case WireType.StartGroup when wireField.Value.Type == ProtoWireValueType.Message:
                 writer.WriteFieldHeader(wireField.FieldNumber, WireType.StartGroup);
                 writer.WriteMessage(default, wireField.Value.MessageValue, WireObjectSerializer.Instance);
                 break;
