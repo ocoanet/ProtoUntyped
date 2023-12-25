@@ -1,4 +1,4 @@
-[![Build](https://github.com/ocoanet/ProtoUntyped/workflows/build-and-test/badge.svg)](https://github.com/ocoanet/ProtoUntyped/actions/workflows/build-and-test.yml)
+[![Build](https://github.com/ocoanet/ProtoUntyped/workflows/build/badge.svg)](https://github.com/ocoanet/ProtoUntyped/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/v/ProtoUntyped)](https://www.nuget.org/packages/ProtoUntyped/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 
