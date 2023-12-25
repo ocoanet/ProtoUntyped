@@ -29,6 +29,10 @@ internal static class ProtoWireEncoder
             case WireType.Fixed64 when wireField.Value.Type == ProtoWireValueType.Int64:
             case WireType.String when wireField.Value.Type == ProtoWireValueType.String:
             case WireType.String when wireField.Value.Type == ProtoWireValueType.Bytes:
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Int32Array && wireField.PackedWireType == WireType.Fixed32:
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Int64Array && wireField.PackedWireType == WireType.Fixed64:
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Int64Array && wireField.PackedWireType == WireType.Varint:
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Int64Array && wireField.PackedWireType == WireType.SignedVarint:
             case WireType.SignedVarint when wireField.Value.Type == ProtoWireValueType.Int32:
             case WireType.SignedVarint when wireField.Value.Type == ProtoWireValueType.Int64:
                 return true;
@@ -108,6 +112,22 @@ internal static class ProtoWireEncoder
                 writer.WriteMessage(default, wireField.Value.MessageValue, WireObjectSerializer.Instance);
                 break;
             
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Int32Array && wireField.PackedWireType == WireType.Fixed32:
+                WritePackedFieldValue(ref writer, wireField.FieldNumber, SerializerFeatures.WireTypeFixed32, PackedValueSerializer<int>.Instance, wireField.Value.Int32ArrayValue);
+                break;
+            
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Int64Array && wireField.PackedWireType == WireType.Fixed64:
+                WritePackedFieldValue(ref writer, wireField.FieldNumber, SerializerFeatures.WireTypeFixed64, PackedValueSerializer<long>.Instance, wireField.Value.Int64ArrayValue);
+                break;
+            
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Int64Array && wireField.PackedWireType == WireType.Varint:
+                WritePackedFieldValue(ref writer, wireField.FieldNumber, SerializerFeatures.WireTypeVarint, PackedValueSerializer<long>.Instance, wireField.Value.Int64ArrayValue);
+                break;
+            
+            case WireType.String when wireField.Value.Type == ProtoWireValueType.Int64Array && wireField.PackedWireType == WireType.SignedVarint:
+                WritePackedFieldValue(ref writer, wireField.FieldNumber, SerializerFeatures.WireTypeSignedVarint, PackedValueSerializer<long>.Instance, wireField.Value.Int64ArrayValue);
+                break;
+            
             case WireType.StartGroup when wireField.Value.Type == ProtoWireValueType.Message:
                 writer.WriteFieldHeader(wireField.FieldNumber, WireType.StartGroup);
                 writer.WriteMessage(default, wireField.Value.MessageValue, WireObjectSerializer.Instance);
@@ -127,6 +147,12 @@ internal static class ProtoWireEncoder
                 ThrowInvalidWireTypeException(wireField);
                 break;
         }
+    }
+
+    private static void WritePackedFieldValue<T>(ref ProtoWriter.State writer, int fieldNumber, SerializerFeatures wireType, ISerializer<T> serializer, T[] values)
+    {
+        var repeatedSerializer = RepeatedSerializer.CreateVector<T>();
+        repeatedSerializer.WriteRepeated(ref writer, fieldNumber, wireType, values, serializer);
     }
 
     private static void ThrowInvalidWireTypeException(ProtoWireField wireField)

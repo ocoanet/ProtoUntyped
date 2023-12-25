@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using ProtoBuf;
+using ProtoBuf.Serializers;
 
 namespace ProtoUntyped.Decoders;
 
@@ -59,7 +61,7 @@ internal static class ProtoWireDecoder
                 return true;
 
             case WireType.String:
-                field = new ProtoWireField(reader.FieldNumber, DecodeString(ref reader, options), WireType.String);
+                field = ReadStringField(ref reader, options);
                 return true;
             
             case WireType.StartGroup:
@@ -99,44 +101,59 @@ internal static class ProtoWireDecoder
         return true;
     }
 
-    private static ProtoWireValue DecodeString(ref ProtoReader.State reader, ProtoDecodeOptions options)
+    private static ProtoWireField ReadStringField(ref ProtoReader.State reader, ProtoDecodeOptions options)
     {
-        // Can be a string, an embedded message or a byte array.
-
+        var fieldNumber = reader.FieldNumber;
         var bytes = reader.AppendBytes(null);
 
-        if (bytes.Length == 0)
-            return DecodeEmptyString(options);
-
-        if (options.EmbeddedMessageValidator.Invoke(bytes) && TryReadEmbeddedMessage(bytes, options, out var embeddedMessage))
-            return new ProtoWireValue(embeddedMessage!);
-
-        if (!options.StringValidator.Invoke(bytes))
-            return new ProtoWireValue(bytes);
-
-        try
+        foreach (var stringDecodingMode in options.PreferredStringDecodingModes)
         {
-            return new ProtoWireValue(_encoding.GetString(bytes));
+            switch (stringDecodingMode)
+            {
+                case StringWireTypeDecodingMode.EmbeddedMessage:
+                    if (options.EmbeddedMessageValidator.Invoke(bytes) && TryReadEmbeddedMessage(bytes, options, out var embeddedMessage))
+                        return new ProtoWireField(fieldNumber, embeddedMessage!);
+                    break;
+                    
+                case StringWireTypeDecodingMode.String:
+                    if (options.StringValidator.Invoke(bytes) && TryReadString(bytes, out var s))
+                        return new ProtoWireField(fieldNumber, s);
+                    break;
+                    
+                case StringWireTypeDecodingMode.Bytes:
+                    return new ProtoWireField(fieldNumber, bytes);
+                
+                case StringWireTypeDecodingMode.PackedVarint:
+                    if (TryReadPackedFieldValue(bytes, SerializerFeatures.WireTypeVarint, PackedValueSerializer<long>.Instance, out var packedVarintValues))
+                        return new ProtoWireField(fieldNumber, WireType.Varint, packedVarintValues);
+                    break;
+                
+                case StringWireTypeDecodingMode.PackedFixed32:
+                    if (TryReadPackedFieldValue(bytes, SerializerFeatures.WireTypeFixed32, PackedValueSerializer<int>.Instance, out var packedInt32Values))
+                        return new ProtoWireField(fieldNumber, WireType.Fixed32, packedInt32Values);
+                    break;
+                
+                case StringWireTypeDecodingMode.PackedFixed64:
+                    if (TryReadPackedFieldValue(bytes, SerializerFeatures.WireTypeFixed64, PackedValueSerializer<long>.Instance, out var packedInt64Values))
+                        return new ProtoWireField(fieldNumber, WireType.Fixed64, packedInt64Values);
+                    break;
+                
+                default:
+                    throw new NotSupportedException($"Unknown decoding mode: {stringDecodingMode}");
+            }
         }
-        catch (Exception)
-        {
-            return new ProtoWireValue(bytes);
-        }
-    }
 
-    private static ProtoWireValue DecodeEmptyString(ProtoDecodeOptions options)
-    {
-        return options.EmptyStringDecodingMode switch
-        {
-            StringWireTypeDecodingMode.String          => new ProtoWireValue(""),
-            StringWireTypeDecodingMode.EmbeddedMessage => new ProtoWireValue(ProtoWireObject.Empty),
-            StringWireTypeDecodingMode.Bytes           => new ProtoWireValue(Array.Empty<byte>()),
-            _                                          => throw new NotSupportedException($"Unknown string decoding mode {options.EmptyStringDecodingMode}"),
-        };
+        return new ProtoWireField(fieldNumber, bytes);
     }
 
     private static bool TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options, out ProtoWireObject? embeddedMessage)
     {
+        if (bytes.Length == 0)
+        {
+            embeddedMessage = ProtoWireObject.Empty;
+            return true;
+        }
+        
         try
         {
             if (ProtoDecoder.HasValidFieldHeader(bytes) && TryReadFields(bytes, options, out var fields))
@@ -152,5 +169,78 @@ internal static class ProtoWireDecoder
 
         embeddedMessage = null;
         return false;
-    }   
+    }
+
+    private static bool TryReadString(byte[] bytes, out string s)
+    {
+        try
+        {
+            s = _encoding.GetString(bytes);
+            return true;
+        }
+        catch (Exception)
+        {
+            s = null!;
+            return false;
+        }
+    }
+
+    private static bool TryReadPackedFieldValue<T>(byte[] bytes, SerializerFeatures wireType, ISerializer<T> serializer, out T[] values)
+    {
+        var tagAndLength = new byte[6];
+        tagAndLength[0] = (1 << 3) | (byte)WireType.String;
+        var headerLength = 1 + WriteVarint64((ulong)bytes.Length, tagAndLength.AsSpan(1));
+        
+        var segment1 = new MemorySegment<byte>(tagAndLength.AsMemory(0, headerLength));
+        var segment2 = segment1.Append(bytes);
+        var sequence = new ReadOnlySequence<byte>(segment1, 0, segment2, segment2.Memory.Length);
+        
+        var reader = ProtoReader.State.Create(sequence, null);
+
+        reader.ReadFieldHeader();
+        
+        var repeatedSerializer = RepeatedSerializer.CreateVector<T>();
+        try
+        {
+            values = repeatedSerializer.ReadRepeated(ref reader, wireType, null, serializer);
+        }
+        catch
+        {
+            values = null!;
+            return false;
+        }
+        
+        return true;
+    }
+    
+    private static int WriteVarint64(ulong value, Span<byte> span)
+    {
+        var count = 0;
+        do
+        {
+            span[count++] = (byte)((value & 0x7F) | 0x80);
+        } while ((value >>= 7) != 0);
+        span[count - 1] &= 0x7F;
+        return count;
+    }
+
+    private class MemorySegment<T> : ReadOnlySequenceSegment<T>
+    {
+        public MemorySegment(ReadOnlyMemory<T> memory)
+        {
+            Memory = memory;
+        }
+
+        public MemorySegment<T> Append(ReadOnlyMemory<T> memory)
+        {
+            var segment = new MemorySegment<T>(memory)
+            {
+                RunningIndex = RunningIndex + Memory.Length
+            };
+
+            Next = segment;
+
+            return segment;
+        }
+    }
 }

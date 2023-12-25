@@ -7,16 +7,18 @@ namespace ProtoUntyped;
 [DebuggerDisplay("FieldNumber = {FieldNumber}, WireType = {WireType}, Value = {" + nameof(ProtoUntypedDebuggerDisplay) + "." + nameof(ProtoUntypedDebuggerDisplay.GetDebugValue) + "(this)}")]
 public class ProtoField
 {
-    public ProtoField(int fieldNumber, WireType wireType, object value)
+    public ProtoField(int fieldNumber, WireType wireType, object value, WireType packedWireType = WireType.None)
     {
         FieldNumber = fieldNumber;
         Value = value;
         WireType = wireType;
+        PackedWireType = packedWireType;
     }
 
     public int FieldNumber { get; }
     public object Value { get; }
     public WireType WireType { get; }
+    public WireType PackedWireType { get; }
 
     public bool IsGroup => WireType == WireType.StartGroup;
 

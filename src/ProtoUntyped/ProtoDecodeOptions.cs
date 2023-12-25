@@ -130,12 +130,21 @@ public class ProtoDecodeOptions
     public Func<Memory<byte>, bool> EmbeddedMessageValidator { get; set; } = DefaultEmbeddedMessageValidator;
 
     /// <summary>
-    /// Specify how empty strings should are decoded.
+    /// Specifies how the <see cref="WireType.String"/> wire type (LEN) should be decoded.
+    /// The decoding modes will be evaluated in-order for every <see cref="WireType.String"/> wire value, and the
+    /// first successfully  decoded value will be selected.
     /// </summary>
     /// <remarks>
-    /// "Empty strings" refers to records with the wire type 2 (LEN) with an empty payload.
+    /// Most embedded messages can be easily identified because they have a well defined structure.
+    /// Therefore, it is relatively safe to always start decoding with <see cref="StringWireTypeDecodingMode.EmbeddedMessage"/>.
+    ///
+    /// Also, because the <see cref="StringWireTypeDecodingMode.Bytes"/> decoding mode cannot fail, it should be configured at
+    /// the end of the list.
+    ///
+    /// If the <see cref="StringWireTypeDecodingMode.Bytes"/> decoding mode is missing for the list, it will be used at a
+    /// fallback when the specified decoding modes failed.
     /// </remarks>
-    public StringWireTypeDecodingMode EmptyStringDecodingMode { get; set; }
+    public IReadOnlyList<StringWireTypeDecodingMode> PreferredStringDecodingModes { get; set; } = DefaultPreferredStringDecodingModes;
 
     /// <summary>
     /// Specifies how the <see cref="WireType.Fixed32"/> wire type should be decoded.
@@ -146,6 +155,13 @@ public class ProtoDecodeOptions
     /// Specifies how the <see cref="WireType.Fixed64"/> wire type should be decoded.
     /// </summary>
     public FixedWireTypeDecodingMode Fixed64DecodingMode { get; set; }
+
+    public static IReadOnlyList<StringWireTypeDecodingMode> DefaultPreferredStringDecodingModes = new[]
+    {
+        StringWireTypeDecodingMode.EmbeddedMessage,
+        StringWireTypeDecodingMode.String,
+        StringWireTypeDecodingMode.Bytes,
+    };
 
     public static bool DefaultGuidValidator((Guid Guid, byte Version) value)
     {

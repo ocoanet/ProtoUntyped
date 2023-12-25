@@ -96,6 +96,26 @@ public partial class ProtoWireObjectTests
             yield return new object[] { new ProtoWireField(1, int64Value, WireType.StartGroup) };
             yield return new object[] { new ProtoWireField(1, int64Value, WireType.EndGroup) };
             yield return new object[] { new ProtoWireField(1, int64Value, WireType.Fixed32) };
+            // Invalid wire type for Int32 array
+            var int32ArrayValue = new ProtoWireValue(new[] { 1 });
+            foreach (var wireType in Enum.GetValues<WireType>().Where(x => x != WireType.String))
+            {
+                yield return new object[] { new ProtoWireField(1, int32ArrayValue, wireType) };
+            }
+            foreach (var packedWireType in Enum.GetValues<WireType>().Where(x => x != WireType.Fixed32))
+            {
+                yield return new object[] { new ProtoWireField(1, int32ArrayValue, WireType.String, packedWireType) };
+            }
+            // Invalid wire type for Int64 array
+            var int64ArrayValue = new ProtoWireValue(new[] { 1L });
+            foreach (var wireType in Enum.GetValues<WireType>().Where(x => x != WireType.String))
+            {
+                yield return new object[] { new ProtoWireField(1, int64ArrayValue, wireType) };
+            }
+            foreach (var packedWireType in Enum.GetValues<WireType>().Where(x => x != WireType.Fixed64 && x != WireType.Varint && x != WireType.SignedVarint))
+            {
+                yield return new object[] { new ProtoWireField(1, int64ArrayValue, WireType.String, packedWireType) };
+            }
             // Invalid wire type for String
             var stringValue = new ProtoWireValue("X");
             yield return new object[] { new ProtoWireField(1, stringValue, WireType.None) };

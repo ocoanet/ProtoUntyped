@@ -118,6 +118,12 @@ internal static class ProtoDecoder
 
             case ProtoWireValueType.Int64:
                 return CreateField(wireField, DecodeInt64Value(wireField, decodeOptions));
+            
+            case ProtoWireValueType.Int32Array:
+                return CreateField(wireField, wireField.Value.Int32Value);
+            
+            case ProtoWireValueType.Int64Array:
+                return CreateField(wireField, wireField.Value.Int64Value);
 
             default:
                 throw new NotSupportedException($"Unknown value type {wireField.Value.Type}");
@@ -126,7 +132,7 @@ internal static class ProtoDecoder
 
     private static ProtoField CreateField(ProtoWireField wireField, object value)
     {
-        return new ProtoField(wireField.FieldNumber, wireField.WireType, value);
+        return new ProtoField(wireField.FieldNumber, wireField.WireType, value, wireField.PackedWireType);
     }
 
     private static List<ProtoField> GroupRepeatedFields(IReadOnlyList<ProtoField> fields)

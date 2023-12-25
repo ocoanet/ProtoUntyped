@@ -12,6 +12,8 @@ public readonly struct ProtoWireValue
     [FieldOffset(0)] private readonly string? _stringValue;
     [FieldOffset(0)] private readonly byte[]? _bytesValue;
     [FieldOffset(0)] private readonly ProtoWireObject? _message;
+    [FieldOffset(0)] private readonly int[] _int32ArrayValue;
+    [FieldOffset(0)] private readonly long[] _int64ArrayValue;
     [FieldOffset(8)] private readonly int _int32Value;
     [FieldOffset(8)] private readonly long _int64Value;
     [FieldOffset(16)] private readonly ProtoWireValueType _type;
@@ -33,6 +35,18 @@ public readonly struct ProtoWireValue
         _type = ProtoWireValueType.Message;
         _message = value;
     }
+    
+    public ProtoWireValue(int[] value)
+    {
+        _type = ProtoWireValueType.Int32Array;
+        _int32ArrayValue = value;
+    }
+    
+    public ProtoWireValue(long[] value)
+    {
+        _type = ProtoWireValueType.Int64Array;
+        _int64ArrayValue = value;
+    }
 
     public ProtoWireValue(int value)
     {
@@ -53,6 +67,10 @@ public readonly struct ProtoWireValue
     public byte[] BytesValue => _type == ProtoWireValueType.Bytes ? _bytesValue! : Array.Empty<byte>();
     
     public ProtoWireObject MessageValue => _type == ProtoWireValueType.Message ? _message! : ProtoWireObject.Empty;
+    
+    public int[] Int32ArrayValue => _type == ProtoWireValueType.Int32Array ? _int32ArrayValue : Array.Empty<int>();
+    
+    public long[] Int64ArrayValue => _type == ProtoWireValueType.Int64Array ? _int64ArrayValue : Array.Empty<long>();
 
     public int Int32Value => _type == ProtoWireValueType.Int32 ? _int32Value : default;
 
@@ -62,12 +80,14 @@ public readonly struct ProtoWireValue
     {
         return _type switch
         {
-            ProtoWireValueType.Bytes   => BytesValue,
-            ProtoWireValueType.Int32   => Int32Value,
-            ProtoWireValueType.Int64   => Int64Value,
-            ProtoWireValueType.Message => MessageValue,
-            ProtoWireValueType.String  => StringValue,
-            _                          => throw new NotSupportedException($"Unknown value type {_type}"),
+            ProtoWireValueType.Bytes       => BytesValue,
+            ProtoWireValueType.Int32       => Int32Value,
+            ProtoWireValueType.Int64       => Int64Value,
+            ProtoWireValueType.Message     => MessageValue,
+            ProtoWireValueType.String      => StringValue,
+            ProtoWireValueType.Int32Array => Int32ArrayValue,
+            ProtoWireValueType.Int64Array => Int64ArrayValue,
+            _                              => throw new NotSupportedException($"Unknown value type {_type}"),
         };
     }
 

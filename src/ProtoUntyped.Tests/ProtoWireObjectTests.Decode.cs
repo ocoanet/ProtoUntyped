@@ -134,6 +134,65 @@ public partial class ProtoWireObjectTests
                 ))
             ));
         }
+        
+        [Fact]
+        public void ShouldParseMessageWithPackedVarintArrays()
+        {
+            var message = new MessageWithPackedVarintArray
+            {
+                Id = 123,
+                Int32Array = [101, 102, 103],
+                Int64Array = [201L, 202L],
+            };
+
+            var bytes = ProtoBufUtil.Serialize(message);
+            var decodeOptions = new ProtoDecodeOptions { PreferredStringDecodingModes = new[] { StringWireTypeDecodingMode.PackedVarint } };
+            var wireObject = ProtoWireObject.Decode(bytes, decodeOptions);
+
+            wireObject.ShouldDeepEqual(new ProtoWireObject(
+                new(1, 123L),
+                new(2, WireType.Varint, [101L, 102L, 103L]),
+                new(3, WireType.Varint, [201L, 202L])
+            ));
+        }
+        
+        [Fact]
+        public void ShouldParseMessageWithPackedFixed32Arrays()
+        {
+            var message = new MessageWithPackedFixed32Array
+            {
+                Id = 123,
+                Int32Array = [101, 102, 103],
+            };
+
+            var bytes = ProtoBufUtil.Serialize(message);
+            var decodeOptions = new ProtoDecodeOptions { PreferredStringDecodingModes = new[] { StringWireTypeDecodingMode.PackedFixed32 } };
+            var wireObject = ProtoWireObject.Decode(bytes, decodeOptions);
+
+            wireObject.ShouldDeepEqual(new ProtoWireObject(
+                new(1, 123L),
+                new(2, WireType.Fixed32, new[] { 101, 102, 103 })
+            ));
+        }
+        
+        [Fact]
+        public void ShouldParseMessageWithPackedFixed64Arrays()
+        {
+            var message = new MessageWithPackedFixed64Array
+            {
+                Id = 123,
+                Int64Array = [101L, 102L, 103L]
+            };
+
+            var bytes = ProtoBufUtil.Serialize(message);
+            var decodeOptions = new ProtoDecodeOptions { PreferredStringDecodingModes = new[] { StringWireTypeDecodingMode.PackedFixed64 } };
+            var wireObject = ProtoWireObject.Decode(bytes, decodeOptions);
+
+            wireObject.ShouldDeepEqual(new ProtoWireObject(
+                new(1, 123L),
+                new(2, WireType.Fixed64, [101L, 102L, 103L])
+            ));
+        }
 
         [Theory]
         [InlineData("ABC")]

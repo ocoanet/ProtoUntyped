@@ -285,7 +285,7 @@ public partial class ProtoObjectTests
             var message = new MessageWithByteArray { Data = Array.Empty<byte>() };
             var bytes = ProtoBufUtil.Serialize(message);
 
-            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { EmptyStringDecodingMode = decodingMode });
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { PreferredStringDecodingModes = new[] { decodingMode } });
 
             protoObject.ShouldDeepEqual(new ProtoObject(
                 new ProtoField(2, WireType.String, expectedValue)
@@ -310,7 +310,7 @@ public partial class ProtoObjectTests
 
             foreach (var decodingMode in Enum.GetValues<StringWireTypeDecodingMode>())
             {
-                ProtoObject.Decode(bytes, new ProtoDecodeOptions { EmptyStringDecodingMode = decodingMode });
+                ProtoObject.Decode(bytes, new ProtoDecodeOptions { PreferredStringDecodingModes = new[] { decodingMode } });
             }
         }
 

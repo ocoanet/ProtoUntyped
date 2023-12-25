@@ -7,4 +7,6 @@ public enum ProtoWireValueType
     Message,
     Int32,
     Int64,
+    Int32Array,
+    Int64Array,
 }

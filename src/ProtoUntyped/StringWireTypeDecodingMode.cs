@@ -7,7 +7,10 @@ namespace ProtoUntyped;
 /// </summary>
 public enum StringWireTypeDecodingMode
 {
-    String,
     EmbeddedMessage,
+    String,
     Bytes,
+    PackedVarint,
+    PackedFixed32,
+    PackedFixed64,
 }
