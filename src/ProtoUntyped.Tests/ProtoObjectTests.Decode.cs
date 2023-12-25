@@ -377,7 +377,7 @@ public partial class ProtoObjectTests
                     yield return c1.ToString() + c2;
                     
 #if !DEBUG
-                    foreach (var c3 in AsciiChars)
+                    foreach (var c3 in asciiChars)
                     {
                         yield return c1.ToString() + c2 + c3;
                     }
