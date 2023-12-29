@@ -16,8 +16,7 @@ namespace ProtoUntyped;
 /// <remarks>
 /// The goal of the <see cref="ProtoWireObject"/> is to be as close as possible to the wire
 /// format. However, decoding <see cref="ProtoWireObject"/> instances still requires to
-/// apply heuristics to parse <see cref="WireType.String"/> fields, which can be either
-/// strings, byte arrays or nested messages.
+/// apply heuristics to parse <see cref="WireType.String"/> fields.
 /// </remarks>
 [DebuggerTypeProxy(typeof(ProtoWireObjectDebugView))]
 [DebuggerDisplay("{" + nameof(ProtoUntypedDebuggerDisplay) + "." + nameof(ProtoUntypedDebuggerDisplay.GetDebugString) + "(this)}")]
@@ -64,9 +63,20 @@ public class ProtoWireObject
         return ProtoDecoder.Decode(this, decodeOptions);
     }
 
+    /// <summary>
+    /// Generates a protoscope string for the <see cref="ProtoWireObject"/>.
+    /// </summary>
     public string ToProtoscopeString()
     {
-        return ProtoscopeFormatter.Default.BuildString(this);
+        return ToProtoscopeString(ProtoscopeFormatter.Default);
+    }
+    
+    /// <summary>
+    /// Generates a protoscope string for the <see cref="ProtoWireObject"/>.
+    /// </summary>
+    public string ToProtoscopeString(ProtoscopeFormatter formatter)
+    {
+        return formatter.BuildString(this);
     }
 
     public void EncodeTo(Stream stream)

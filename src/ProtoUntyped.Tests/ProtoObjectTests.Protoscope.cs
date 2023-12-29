@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Linq;
 using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
@@ -8,10 +9,10 @@ namespace ProtoUntyped.Tests;
 
 partial class ProtoObjectTests
 {
-    public class ToString
+    public class Protoscope
     {
         [Fact]
-        public void ShouldGetStringWithSimpleType()
+        public void ShouldGetProtoscopeStringWithSimpleType()
         {
             var message = new SearchRequest
             {
@@ -25,19 +26,17 @@ partial class ProtoObjectTests
 
             var expectedText =
                 """
-                message {
-                - 1 = "/users"
-                - 2 = 5
-                - 3 = 40
-                }
+                1: {"/users"}
+                2: 5
+                3: 40
 
                 """;
 
-            protoObject.ToString().ShouldEqual(expectedText);
+            protoObject.ToProtoscopeString().ShouldEqual(expectedText);
         }
 
         [Fact]
-        public void ShouldGetStringWithGuid()
+        public void ShouldGetProtoscopeStringWithGuid()
         {
             var message = new MessageWithGuid
             {
@@ -49,17 +48,15 @@ partial class ProtoObjectTests
 
             var expectedText =
                 $$"""
-                message {
-                - 1 = "{{message.Guid}}"
-                }
+                1: {"{{message.Guid}}"}
 
                 """;
 
-            protoObject.ToString().ShouldEqual(expectedText);
+            protoObject.ToProtoscopeString().ShouldEqual(expectedText);
         }
 
         [Fact]
-        public void ShouldGetStringWithNestedTypes()
+        public void ShouldGetProtoscopeStringWithNestedTypes()
         {
             var message = new MessageWithNestedTypes
             {
@@ -76,64 +73,58 @@ partial class ProtoObjectTests
 
             var expectedText =
                 """
-                message {
-                - 1 = 42
-                - 2 = message {
-                    - 1 = message {
-                        - 1 = 333
-                        - 2 = "ABC"
-                        }
-                    }
-                - 3 = "K"
+                1: 42
+                2: {
+                  1: {
+                    1: 333
+                    2: {"ABC"}
+                  }
                 }
+                3: {"K"}
 
                 """;
 
-            protoObject.ToString().ShouldEqual(expectedText);
+            protoObject.ToProtoscopeString().ShouldEqual(expectedText);
         }
 
         [Fact]
-        public void ShouldGetStringWithByteArray()
+        public void ShouldGetProtoscopeStringWithByteArray()
         {
             var data = ThreadLocalFixture.CreateMany<byte>(20);
             var message = new MessageWithByteArray { Id = 123, Data = data };
             var bytes = ProtoBufUtil.Serialize(message);
 
             var protoObject = ProtoObject.Decode(bytes);
+            
             var expectedText =
                 $$"""
-                message {
-                - 1 = {{message.Id}}
-                - 2 = {{Convert.ToBase64String(data)}}
-                }
-                
-                """;
-                
-            protoObject.ToString().ShouldEqual(expectedText);
+                  1: {{message.Id}}
+                  2: {`{{Convert.ToHexString(data).ToLower()}}`}
+
+                  """;
+            
+            protoObject.ToProtoscopeString().ShouldEqual(expectedText);
         }
 
         [Fact]
-        public void ShouldGetStringWithInt32Array()
+        public void ShouldGetProtoscopeStringWithInt32Array()
         {
-            var message = new MessageWithArrays { Id = 100, Int32Array = [1, 2, 3] };
+            var message = new MessageWithArrays { Id = 100, Int32Array = new[] { 1, 2, 3 } };
             var bytes = ProtoBufUtil.Serialize(message);
 
             var protoObject = ProtoObject.Decode(bytes);
-
             var expectedText =
                 """
-                message {
-                - 1 = 100
-                - 2 = array [ 1 2 3 ]
-                }
-                
+                1: 100
+                2: { 1 2 3 }
+
                 """;
                 
-            protoObject.ToString().ShouldEqual(expectedText);
+            protoObject.ToProtoscopeString().ShouldEqual(expectedText);
         }
 
         [Fact]
-        public void ShouldGetStringWithDecimalArray()
+        public void ShouldGetProtoscopeStringWithDecimalArray()
         {
             var message = new MessageWithDecimalArray { Values = new[] { 1.1m, 2.2m, 3.3m } };
             var bytes = ProtoBufUtil.Serialize(message);
@@ -141,13 +132,11 @@ partial class ProtoObjectTests
             var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDecimal = true });
             var expectedText =
                 """
-                message {
-                - 1 = array [ 1.1 2.2 3.3 ]
-                }
-                
+                1: { 1.1m 2.2m 3.3m }
+
                 """;
                 
-            protoObject.ToString().ShouldEqual(expectedText);
+            protoObject.ToProtoscopeString().ShouldEqual(expectedText);
         }
 
         [Theory]
@@ -158,7 +147,7 @@ partial class ProtoObjectTests
         [InlineData("2021-10-23")]
         [InlineData("2001-06-06")]
         [InlineData("2030-06-06")]
-        public void ShouldGetStringWithDateTime(string dateTime)
+        public void ShouldGetProtoscopeStringWithDateTime(string dateTime)
         {
             var message = new MessageWithDateTime { Timestamp = DateTime.Parse(dateTime, CultureInfo.InvariantCulture) };
             var bytes = ProtoBufUtil.Serialize(message);
@@ -167,13 +156,11 @@ partial class ProtoObjectTests
 
             var expectedText =
                 $$"""
-                  message {
-                  - 1 = "{{dateTime}}"
-                  }
+                1: "{{dateTime}}"
 
-                  """;
+                """;
 
-            protoObject.ToString().ShouldEqual(expectedText);
+            protoObject.ToProtoscopeString().ShouldEqual(expectedText);
         }
 
         [Theory]
@@ -183,7 +170,7 @@ partial class ProtoObjectTests
         [InlineData("15:35:00")]
         [InlineData("15:00:00")]
         [InlineData("5.15:16:17")]
-        public void ShouldGetStringWithTimeSpan(string timeSpan)
+        public void ShouldGetProtoscopeStringWithTimeSpan(string timeSpan)
         {
             var message = new MessageWithTimeSpan { Duration = TimeSpan.Parse(timeSpan, CultureInfo.InvariantCulture) };
             var bytes = ProtoBufUtil.Serialize(message);
@@ -192,13 +179,26 @@ partial class ProtoObjectTests
 
             var expectedText =
                 $$"""
-                message {
-                - 1 = "{{timeSpan}}"
-                }
+                1: "{{timeSpan}}"
 
                 """;
 
-            protoObject.ToString().ShouldEqual(expectedText);
+            protoObject.ToProtoscopeString().ShouldEqual(expectedText);
+        }
+
+        [Fact]
+        public void ShouldGetProtoscopeStringForAllMessages()
+        {
+            var assembly = typeof(SearchRequest).Assembly;
+            var messages = assembly.GetTypes()
+                                   .Where(x => Attribute.IsDefined(x, typeof(ProtoContractAttribute)) && !x.IsAbstract)
+                                   .Select(x => ThreadLocalFixture.Create(x));
+
+            foreach (var message in messages)
+            {
+                var bytes = ProtoBufUtil.Serialize(message);
+                ProtoObject.Decode(bytes).ToProtoscopeString();
+            }
         }
     }
 }

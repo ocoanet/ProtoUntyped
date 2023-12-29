@@ -79,6 +79,32 @@ public class ProtoObject
     {
         return formatter.BuildString(this);
     }
+    
+    /// <summary>
+    /// Generates a protoscope-like string for the <see cref="ProtoObject"/>.
+    /// </summary>
+    /// <remarks>
+    /// Note that a <see cref="ProtoObject"/> can contain types that are not
+    /// valid in the protobuf wire-format. Please use <see cref="ProtoWireObject"/>
+    /// if you need to generate strict protoscope strings.
+    /// </remarks>
+    public string ToProtoscopeString()
+    {
+        return ToProtoscopeString(ProtoscopeFormatter.Default);
+    }
+
+    /// <summary>
+    /// Generates a protoscope-like string for the <see cref="ProtoObject"/>.
+    /// </summary>
+    /// <remarks>
+    /// Note that a <see cref="ProtoObject"/> can contain types that are not
+    /// valid in the protobuf wire-format. Please use <see cref="ProtoWireObject"/>
+    /// if you need to generate strict protoscope strings.
+    /// </remarks>
+    public string ToProtoscopeString(ProtoscopeFormatter formatter)
+    {
+        return formatter.BuildString(this);
+    }
 
     public static ProtoObject Decode(ReadOnlyMemory<byte> data)
     {

@@ -144,50 +144,34 @@ public class ProtoFormatter
 
     protected virtual void FormatDateTime(StringBuilder stringBuilder, int indentSize, DateTime dateTime)
     {
-        if (dateTime.TimeOfDay == default)
-        {
-            stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:yyyy-MM-dd}\"", dateTime);
-            stringBuilder.AppendLine();    
-        }
-        else if (dateTime.TimeOfDay.Milliseconds == default)
-        {
-            stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:yyyy-MM-dd} {1:hh\\:mm\\:ss}\"", dateTime, dateTime.TimeOfDay);
-            stringBuilder.AppendLine();    
-        }
-        else
-        {
-            stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:yyyy-MM-dd} {1:hh\\:mm\\:ss\\.fff}\"", dateTime, dateTime.TimeOfDay);
-            stringBuilder.AppendLine();
-        }
+        stringBuilder.AppendFormat(CultureInfo.InvariantCulture, GetDefaultFormat(dateTime), dateTime);
+        stringBuilder.AppendLine();
     }
 
     protected virtual void FormatTimeSpan(StringBuilder stringBuilder, int indentSize, TimeSpan timeSpan)
     {
-        if (timeSpan.Days == default)
+        stringBuilder.AppendFormat(CultureInfo.InvariantCulture, GetDefaultFormat(timeSpan), timeSpan);
+        stringBuilder.AppendLine();
+    }
+
+    public static string GetDefaultFormat(DateTime dateTime)
+    {
+        return dateTime switch
         {
-            if (timeSpan.Milliseconds == default)
-            {
-                stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:hh\\:mm\\:ss}\"", timeSpan);
-                stringBuilder.AppendLine();    
-            }
-            else
-            {
-                stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:hh\\:mm\\:ss\\.fff}\"", timeSpan);
-                stringBuilder.AppendLine();        
-            }
-        }
-        else
+            { TimeOfDay.Ticks: 0 }        => "\"{0:yyyy-MM-dd}\"",
+            { TimeOfDay.Milliseconds: 0 } => "\"{0:yyyy-MM-dd} {0:HH\\:mm\\:ss}\"",
+            _                             => "\"{0:yyyy-MM-dd} {0:HH\\:mm\\:ss\\.fff}\""
+        };
+    }
+
+    public static string GetDefaultFormat(TimeSpan timeSpan)
+    {
+        return timeSpan switch
         {
-            if (timeSpan.Milliseconds == default)
-            {
-                stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:d\\.hh\\:mm\\:ss}\"", timeSpan);
-                stringBuilder.AppendLine();        
-            }
-            else
-            {
-                stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0:d\\.hh\\:mm\\:ss\\.fff}\"", timeSpan);
-                stringBuilder.AppendLine();        
-            }
-        }
+            { Days: 0 } and { Milliseconds: 0 } => "\"{0:hh\\:mm\\:ss}\"",
+            { Days: 0 }                         => "\"{0:hh\\:mm\\:ss\\.fff}\"",
+            { Milliseconds: 0 }                 => "\"{0:d\\.hh\\:mm\\:ss}\"",
+            _                                   => "\"{0:d\\.hh\\:mm\\:ss\\.fff}\""
+        };
     }
 }

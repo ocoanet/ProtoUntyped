@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
@@ -166,6 +167,21 @@ public partial class ProtoWireObjectTests
                 """;
 
             obj.ToProtoscopeString().ShouldEqual(expectedText);
+        }
+        
+        [Fact]
+        public void ShouldGetProtoscopeStringForAllMessages()
+        {
+            var assembly = typeof(SearchRequest).Assembly;
+            var messages = assembly.GetTypes()
+                                   .Where(x => Attribute.IsDefined(x, typeof(ProtoContractAttribute)) && !x.IsAbstract)
+                                   .Select(x => ThreadLocalFixture.Create(x));
+
+            foreach (var message in messages)
+            {
+                var bytes = ProtoBufUtil.Serialize(message);
+                ProtoWireObject.Decode(bytes).ToProtoscopeString();
+            }
         }
     }
 }
