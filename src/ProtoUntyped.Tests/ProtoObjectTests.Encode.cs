@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ProtoBuf;
 using ProtoUntyped.Tests.Messages;
 using Xunit;
 
@@ -11,6 +12,27 @@ public partial class ProtoObjectTests
 {
     public class Encode
     {
+        [Fact]
+        public void ShouldEncodeTestMessage()
+        {
+            var protoObject = new ProtoObject(
+                new ProtoField(1, "/users"),
+                new ProtoField(2, 8, WireType.Varint),
+                new ProtoField(3, 50, WireType.Varint)
+            );
+
+            var bytes = protoObject.Encode().ToArray();
+
+            var expectedBytes = ProtoBufUtil.Serialize(new SearchRequest
+            {
+                Query = "/users",
+                PageNumber = 8,
+                ResultPerPage = 50,
+            });
+            
+            bytes.ShouldEqual(expectedBytes);
+        }
+        
         [Fact]
         public void ShouldEncodeTestMessageToArray()
         {

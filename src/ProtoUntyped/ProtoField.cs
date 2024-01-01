@@ -5,7 +5,7 @@ using ProtoBuf;
 namespace ProtoUntyped;
 
 [DebuggerDisplay("FieldNumber = {FieldNumber}, WireType = {WireType}, Value = {" + nameof(ProtoUntypedDebuggerDisplay) + "." + nameof(ProtoUntypedDebuggerDisplay.GetDebugValue) + "(this)}")]
-public class ProtoField
+public partial class ProtoField
 {
     public ProtoField(int fieldNumber, WireType wireType, string value, WireType packedWireType = WireType.None)
         : this(fieldNumber, wireType, (object)value, packedWireType)
