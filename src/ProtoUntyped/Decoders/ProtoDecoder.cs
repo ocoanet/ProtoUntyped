@@ -125,16 +125,16 @@ internal static class ProtoDecoder
     {
         var messageFields = wireField.Value.MessageValue.Fields;
 
-        if (decodeOptions.DecodeGuid && GuidDecoder.TryParseGuid(messageFields, decodeOptions) is { } guid)
+        if (decodeOptions.DecodeGuid && GuidDecoder.TryDecodeGuid(messageFields, decodeOptions) is { } guid)
             return new ProtoField(wireField.FieldNumber, wireField.WireType, guid, wireField.PackedWireType);
 
-        if (decodeOptions.DecodeDateTime && TimeDecoder.TryParseDateTime(messageFields, decodeOptions) is { } dateTime)
+        if (decodeOptions.DecodeDateTime && TimeDecoder.TryDecodeDateTime(messageFields, decodeOptions) is { } dateTime)
             return new ProtoField(wireField.FieldNumber, wireField.WireType, dateTime, wireField.PackedWireType);
 
-        if (decodeOptions.DecodeTimeSpan && TimeDecoder.TryParseTimeSpan(messageFields, decodeOptions) is { } timeSpan)
+        if (decodeOptions.DecodeTimeSpan && TimeDecoder.TryDecodeTimeSpan(messageFields, decodeOptions) is { } timeSpan)
             return new ProtoField(wireField.FieldNumber, wireField.WireType, timeSpan, wireField.PackedWireType);
 
-        if (decodeOptions.DecodeDecimal && DecimalDecoder.TryParseDecimal(messageFields, decodeOptions) is { } dec)
+        if (decodeOptions.DecodeDecimal && DecimalDecoder.TryDecodeDecimal(messageFields, decodeOptions) is { } dec)
             return new ProtoField(wireField.FieldNumber, wireField.WireType, dec, wireField.PackedWireType);
 
         var protoObject = new ProtoObject(DecodeFields(messageFields, decodeOptions));

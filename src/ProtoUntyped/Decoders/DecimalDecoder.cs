@@ -29,7 +29,7 @@ internal static class DecimalDecoder
         return new ProtoWireObject(fields);
     }
 
-    public static decimal? TryParseDecimal(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
+    public static decimal? TryDecodeDecimal(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
     {
         if (fields.Count is 0 or > 3)
             return null;

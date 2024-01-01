@@ -18,7 +18,7 @@ internal static class ProtoWireDecoder
     public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out ProtoWireObject? wireObject)
 #endif
     {
-        if (TryReadFields(data, options, out var fields))
+        if (TryDecodeFields(data, options, out var fields))
         {
             wireObject = new ProtoWireObject(fields);
             return true;
@@ -28,14 +28,14 @@ internal static class ProtoWireDecoder
         return false;
     }
 
-    private static bool TryReadFields(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out List<ProtoWireField> wireFields)
+    private static bool TryDecodeFields(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out List<ProtoWireField> wireFields)
     {
         wireFields = new List<ProtoWireField>();
 
         var reader = ProtoReader.State.Create(data, null);
         while (reader.ReadFieldHeader() != 0)
         {
-            if (!TryReadField(ref reader, options, out var field))
+            if (!TryDecodedField(ref reader, options, out var field))
                 return false;
 
             wireFields.Add(field!);
@@ -44,7 +44,7 @@ internal static class ProtoWireDecoder
         return true;
     }
 
-    private static bool TryReadField(ref ProtoReader.State reader, ProtoDecodeOptions options, out ProtoWireField? field)
+    private static bool TryDecodedField(ref ProtoReader.State reader, ProtoDecodeOptions options, out ProtoWireField? field)
     {
         switch (reader.WireType)
         {
@@ -61,11 +61,11 @@ internal static class ProtoWireDecoder
                 return true;
 
             case WireType.String:
-                field = ReadStringField(ref reader, options);
+                field = DecodeStringField(ref reader, options);
                 return true;
             
             case WireType.StartGroup:
-                if (TryReadGroup(ref reader, options, out var value))
+                if (TryDecodeGroup(ref reader, options, out var value))
                 {
                     field = new ProtoWireField(reader.FieldNumber, value, WireType.StartGroup);
                     return true;
@@ -77,7 +77,7 @@ internal static class ProtoWireDecoder
         return false;
     }
     
-    private static bool TryReadGroup(ref ProtoReader.State reader, ProtoDecodeOptions options, out ProtoWireValue value)
+    private static bool TryDecodeGroup(ref ProtoReader.State reader, ProtoDecodeOptions options, out ProtoWireValue value)
     {
         var subItemToken = reader.StartSubItem();
 
@@ -85,7 +85,7 @@ internal static class ProtoWireDecoder
         
         while (reader.ReadFieldHeader() != 0)
         {
-            if (!TryReadField(ref reader, options, out var field))
+            if (!TryDecodedField(ref reader, options, out var field))
             {
                 value = default;
                 return false;
@@ -101,7 +101,7 @@ internal static class ProtoWireDecoder
         return true;
     }
 
-    private static ProtoWireField ReadStringField(ref ProtoReader.State reader, ProtoDecodeOptions options)
+    private static ProtoWireField DecodeStringField(ref ProtoReader.State reader, ProtoDecodeOptions options)
     {
         var fieldNumber = reader.FieldNumber;
         var bytes = reader.AppendBytes(null);
@@ -111,12 +111,12 @@ internal static class ProtoWireDecoder
             switch (stringDecodingMode)
             {
                 case StringWireTypeDecodingMode.EmbeddedMessage:
-                    if (options.EmbeddedMessageValidator.Invoke(bytes) && TryReadEmbeddedMessage(bytes, options, out var embeddedMessage))
+                    if (options.EmbeddedMessageValidator.Invoke(bytes) && TryDecodeEmbeddedMessage(bytes, options, out var embeddedMessage))
                         return new ProtoWireField(fieldNumber, embeddedMessage!);
                     break;
                     
                 case StringWireTypeDecodingMode.String:
-                    if (options.StringValidator.Invoke(bytes) && TryReadString(bytes, out var s))
+                    if (options.StringValidator.Invoke(bytes) && TryDecodeString(bytes, out var s))
                         return new ProtoWireField(fieldNumber, s);
                     break;
                     
@@ -124,17 +124,17 @@ internal static class ProtoWireDecoder
                     return new ProtoWireField(fieldNumber, bytes);
                 
                 case StringWireTypeDecodingMode.PackedVarint:
-                    if (TryReadPackedFieldValue(bytes, SerializerFeatures.WireTypeVarint, PackedValueSerializer<long>.Instance, out var packedVarintValues))
+                    if (TryDecodePackedFieldValue(bytes, SerializerFeatures.WireTypeVarint, PackedValueSerializer<long>.Instance, out var packedVarintValues))
                         return new ProtoWireField(fieldNumber, WireType.Varint, packedVarintValues);
                     break;
                 
                 case StringWireTypeDecodingMode.PackedFixed32:
-                    if (TryReadPackedFieldValue(bytes, SerializerFeatures.WireTypeFixed32, PackedValueSerializer<int>.Instance, out var packedInt32Values))
+                    if (TryDecodePackedFieldValue(bytes, SerializerFeatures.WireTypeFixed32, PackedValueSerializer<int>.Instance, out var packedInt32Values))
                         return new ProtoWireField(fieldNumber, WireType.Fixed32, packedInt32Values);
                     break;
                 
                 case StringWireTypeDecodingMode.PackedFixed64:
-                    if (TryReadPackedFieldValue(bytes, SerializerFeatures.WireTypeFixed64, PackedValueSerializer<long>.Instance, out var packedInt64Values))
+                    if (TryDecodePackedFieldValue(bytes, SerializerFeatures.WireTypeFixed64, PackedValueSerializer<long>.Instance, out var packedInt64Values))
                         return new ProtoWireField(fieldNumber, WireType.Fixed64, packedInt64Values);
                     break;
                 
@@ -146,7 +146,7 @@ internal static class ProtoWireDecoder
         return new ProtoWireField(fieldNumber, bytes);
     }
 
-    private static bool TryReadEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options, out ProtoWireObject? embeddedMessage)
+    private static bool TryDecodeEmbeddedMessage(byte[] bytes, ProtoDecodeOptions options, out ProtoWireObject? embeddedMessage)
     {
         if (bytes.Length == 0)
         {
@@ -156,7 +156,7 @@ internal static class ProtoWireDecoder
         
         try
         {
-            if (ProtoDecoder.HasValidFieldHeader(bytes) && TryReadFields(bytes, options, out var fields))
+            if (ProtoDecoder.HasValidFieldHeader(bytes) && TryDecodeFields(bytes, options, out var fields))
             {
                 embeddedMessage = new ProtoWireObject(fields);
                 return true;
@@ -171,7 +171,7 @@ internal static class ProtoWireDecoder
         return false;
     }
 
-    private static bool TryReadString(byte[] bytes, out string s)
+    private static bool TryDecodeString(byte[] bytes, out string s)
     {
         try
         {
@@ -185,7 +185,7 @@ internal static class ProtoWireDecoder
         }
     }
 
-    private static bool TryReadPackedFieldValue<T>(byte[] bytes, SerializerFeatures wireType, ISerializer<T> serializer, out T[] values)
+    private static bool TryDecodePackedFieldValue<T>(byte[] bytes, SerializerFeatures wireType, ISerializer<T> serializer, out T[] values)
     {
         var tagAndLength = new byte[6];
         tagAndLength[0] = (1 << 3) | (byte)WireType.String;

@@ -7,7 +7,7 @@ namespace ProtoUntyped.Decoders;
 
 internal static class TimeDecoder
 {
-    private static readonly DateTime _epoch = new DateTime(1970, 1, 1);
+    private static readonly DateTime Epoch = new DateTime(1970, 1, 1);
     
     public static ProtoWireObject EncodeDateTime(DateTime value)
     {
@@ -35,26 +35,26 @@ internal static class TimeDecoder
         return new ProtoWireObject(fields);
     }
 
-    public static DateTime? TryParseDateTime(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
+    public static DateTime? TryDecodeDateTime(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
     {
-        if (TryParseScaledTicks(fields) is not { } ticks || ticks.ToDateTime() is not { } dateTime)
+        if (TryDecodeScaledTicks(fields) is not { } ticks || ticks.ToDateTime() is not { } dateTime)
             return null;
 
         return options.DateTimeValidator.Invoke(dateTime) ? dateTime : null;
     }
 
-    public static TimeSpan? TryParseTimeSpan(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
+    public static TimeSpan? TryDecodeTimeSpan(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
     {
         if (fields.Any(x => x.FieldNumber == 3)) // Kind should not be specified for TimeSpan
             return null;
             
-        if (TryParseScaledTicks(fields) is not { } ticks || ticks.ToTimeSpan() is not { } timeSpan)
+        if (TryDecodeScaledTicks(fields) is not { } ticks || ticks.ToTimeSpan() is not { } timeSpan)
             return null;
 
         return options.TimeSpanValidator.Invoke(timeSpan) ? timeSpan : null;
     }
 
-    private static ScaledTicks? TryParseScaledTicks(IReadOnlyList<ProtoWireField> fields)
+    private static ScaledTicks? TryDecodeScaledTicks(IReadOnlyList<ProtoWireField> fields)
     {
         if (fields.Count is 0 or > 3)
             return null;
@@ -140,7 +140,7 @@ internal static class TimeDecoder
                 _                               => null,
             };
 
-            static DateTime FromTicks(DateTimeKind kind, long ticks) => DateTime.SpecifyKind(_epoch, kind).AddTicks(ticks);
+            static DateTime FromTicks(DateTimeKind kind, long ticks) => DateTime.SpecifyKind(Epoch, kind).AddTicks(ticks);
         }
             
         public TimeSpan? ToTimeSpan()
@@ -168,7 +168,7 @@ internal static class TimeDecoder
                 return new ScaledTicks(1, TimeSpanScale.MinMax, DateTimeKind.Unspecified);
 
             var kind = dateTime.Kind;
-            var timeSpan = dateTime - DateTime.SpecifyKind(_epoch, kind);
+            var timeSpan = dateTime - DateTime.SpecifyKind(Epoch, kind);
             var (value, scale) = ComputeValueAndScale(timeSpan);
             
             return new ScaledTicks(value, scale, kind);

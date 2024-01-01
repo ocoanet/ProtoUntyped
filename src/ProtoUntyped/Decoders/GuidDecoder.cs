@@ -7,7 +7,7 @@ namespace ProtoUntyped.Decoders;
 
 internal static class GuidDecoder
 {
-    public static Guid? TryParseGuid(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
+    public static Guid? TryDecodeGuid(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
     {
         if (fields.Count is not 2)
             return null;
