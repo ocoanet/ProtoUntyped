@@ -200,5 +200,51 @@ partial class ProtoObjectTests
 
             protoObject.ToString().ShouldEqual(expectedText);
         }
+
+        [Fact]
+        public void ShouldGetStringWithDateTimeArray()
+        {
+            var message = new MessageWithDateTimeArray
+            {
+                Id = 123,
+                Timestamps = new()
+                {
+                    new DateTime(2024, 01, 01, 14, 00, 00),
+                    new DateTime(2024, 01, 31, 09, 30, 00),
+                }
+            };
+            
+            var bytes = ProtoBufUtil.Serialize(message);
+            var protoObject = ProtoObject.Decode(bytes, new ProtoDecodeOptions { DecodeDateTime = true, DecodeTimeSpan = true });
+
+            var expectedText =
+                """
+                message {
+                - 1 = 123
+                - 2 = array [
+                    "2024-01-01 14:00:00"
+                    "2024-01-31 09:30:00"
+                    ]
+                }
+
+                """;
+
+            protoObject.ToString().ShouldEqual(expectedText);
+        }
+        
+        [Fact]
+        public void ShouldGetStringForAllMessages()
+        {
+            var formatter = new StrictProtoFormatter();
+            var messages = TestData.CreateTestMessages();
+
+            foreach (var message in messages)
+            {
+                var bytes = ProtoBufUtil.Serialize(message);
+                var protoObject = ProtoObject.Decode(bytes, TestData.GetDecodeOptions(message));
+                
+                protoObject.ToString(formatter);
+            }
+        }
     }
 }

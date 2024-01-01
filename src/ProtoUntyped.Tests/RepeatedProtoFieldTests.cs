@@ -12,8 +12,8 @@ public class RepeatedProtoFieldTests
 
         var expectedText = """
             - 5 = array [
-                - 0 = "Text1"
-                - 1 = "Text2"
+                "Text1"
+                "Text2"
                 ]
 
             """;

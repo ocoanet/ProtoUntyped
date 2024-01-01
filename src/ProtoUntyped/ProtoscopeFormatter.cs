@@ -73,16 +73,16 @@ public class ProtoscopeFormatter
             case ProtoWireValueType.String:
                 FormatString(stringBuilder, field.Value.StringValue);
                 break;
-            
+
             case ProtoWireValueType.Int64Array when field.PackedWireType == WireType.Varint:
             case ProtoWireValueType.Int64Array when field.PackedWireType == WireType.SignedVarint:
                 FormatNumberArray(stringBuilder, field.Value.Int64ArrayValue, "{0}");
                 break;
-            
+
             case ProtoWireValueType.Int32Array when field.PackedWireType == WireType.Fixed32:
                 FormatNumberArray(stringBuilder, field.Value.Int32ArrayValue, _fixed32Format);
                 break;
-            
+
             case ProtoWireValueType.Int64Array when field.PackedWireType == WireType.Fixed64:
                 FormatNumberArray(stringBuilder, field.Value.Int64ArrayValue, _fixed64Format);
                 break;
@@ -100,7 +100,7 @@ public class ProtoscopeFormatter
             stringBuilder.Append("{}");
             return;
         }
-        
+
         stringBuilder.Append("{ ");
 
         foreach (var item in array)
@@ -108,7 +108,7 @@ public class ProtoscopeFormatter
             stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, item);
             stringBuilder.Append(" ");
         }
-        
+
         stringBuilder.Append("}");
     }
 
@@ -121,7 +121,7 @@ public class ProtoscopeFormatter
             stringBuilder.Append($"{{`{ToHexString(bytes, 0, bytes.Length)}`}}");
             return;
         }
-        
+
         stringBuilder.AppendLine("{");
 
         for (var index = 0; index < bytes.Length; index += maxLengthBytes)
@@ -131,7 +131,7 @@ public class ProtoscopeFormatter
             stringBuilder.Append(ToHexString(bytes, index, Math.Min(index + maxLengthBytes, bytes.Length)));
             stringBuilder.AppendLine("`");
         }
-        
+
         stringBuilder.Append(' ', indentSize - _indentIncrement);
         stringBuilder.Append("}");
 
@@ -187,74 +187,107 @@ public class ProtoscopeFormatter
     {
         stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{{\"{0}\"}}", value);
     }
-    
+
     private void BuildString(StringBuilder stringBuilder, int indentSize, ProtoField field)
     {
         switch (field.Value)
         {
-            case ProtoObject obj:
-                FormatMessage(stringBuilder, indentSize, obj, field.WireType);
+            case string s:
+                FormatString(stringBuilder, s);
                 break;
-                
+
             case byte[] array:
                 FormatByteArray(stringBuilder, indentSize, array);
                 break;
 
-            case float[] array:
-                FormatNumberArray(stringBuilder, array, "{0}f");
-                break;
-                
-            case double[] array:
-                FormatNumberArray(stringBuilder, array, "{0}d");
-                break;
-                
-            case int[] array when field.PackedWireType == WireType.Fixed32 :
-                FormatNumberArray(stringBuilder, array, _fixed32Format);
-                break;
-            
-            case int[] array:
-                FormatNumberArray(stringBuilder, array, "{0}");
-                break;
-            
-            case long[] array when field.PackedWireType == WireType.Fixed64:
-                FormatNumberArray(stringBuilder, array, _fixed64Format);
-                break;
-            
-            case long[] array:
-                FormatNumberArray(stringBuilder, array, "{0}");
+            case ProtoObject obj:
+                FormatMessage(stringBuilder, indentSize, obj, field.WireType);
                 break;
 
-            case decimal[] array:
-                FormatNumberArray(stringBuilder, array, "{0}m");
-                break;
-            
             case int value when field.WireType == WireType.Fixed32:
                 stringBuilder.AppendFormat(CultureInfo.InvariantCulture, _fixed32Format, value);
+                break;
+
+            case int:
+                FormatNumericValue(stringBuilder, field.Value, "{0}");
                 break;
 
             case long value when field.WireType == WireType.Fixed64:
                 stringBuilder.AppendFormat(CultureInfo.InvariantCulture, _fixed64Format, value);
                 break;
-                
-            case string:
-            case Guid:
-                FormatString(stringBuilder, field.Value.ToString());
+
+            case long:
+                FormatNumericValue(stringBuilder, field.Value, "{0}");
                 break;
-                
+
+            case float:
+                FormatNumericValue(stringBuilder, field.Value, "{0}f");
+                break;
+
+            case double:
+                FormatNumericValue(stringBuilder, field.Value, "{0}d");
+                break;
+
+            case int[] array when field.PackedWireType == WireType.Fixed32:
+                FormatNumberArray(stringBuilder, array, _fixed32Format);
+                break;
+
+            case int[] array:
+                FormatNumberArray(stringBuilder, array, "{0}");
+                break;
+
+            case long[] array when field.PackedWireType == WireType.Fixed64:
+                FormatNumberArray(stringBuilder, array, _fixed64Format);
+                break;
+
+            case long[] array:
+                FormatNumberArray(stringBuilder, array, "{0}");
+                break;
+
+            case float[] array:
+                FormatNumberArray(stringBuilder, array, "{0}f");
+                break;
+
+            case double[] array:
+                FormatNumberArray(stringBuilder, array, "{0}d");
+                break;
+
+            case decimal:
+                FormatNumericValue(stringBuilder, field.Value, "{0}m");
+                break;
+
             case DateTime dateTime:
                 FormatDateTime(stringBuilder, indentSize, dateTime);
                 break;
-                    
+
             case TimeSpan timeSpan:
                 FormatTimeSpan(stringBuilder, indentSize, timeSpan);
                 break;
 
+            case Guid:
+                FormatString(stringBuilder, field.Value.ToString());
+                break;
+
+            case decimal[] array:
+                FormatNumberArray(stringBuilder, array, "{0}m");
+                break;
+
             default:
-                stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", field.Value);
+                FormatUnknownValue(stringBuilder, field);
                 break;
         }
     }
-    
+
+    protected virtual void FormatNumericValue(StringBuilder stringBuilder, object value, string format)
+    {
+        stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
+    }
+
+    protected virtual void FormatUnknownValue(StringBuilder stringBuilder, ProtoField field)
+    {
+        stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", field.Value);
+    }
+
     protected virtual void FormatMessage(StringBuilder stringBuilder, int indentSize, ProtoObject obj, WireType wireType)
     {
         if (wireType == WireType.StartGroup)
@@ -292,7 +325,7 @@ public class ProtoscopeFormatter
         stringBuilder.Append(' ', indentSize - _indentIncrement);
         stringBuilder.Append("}");
     }
-    
+
     protected virtual void FormatDateTime(StringBuilder stringBuilder, int indentSize, DateTime dateTime)
     {
         stringBuilder.AppendFormat(CultureInfo.InvariantCulture, ProtoFormatter.GetDefaultFormat(dateTime), dateTime);
@@ -309,7 +342,7 @@ public class ProtoscopeFormatter
 
         IEnumerable<ProtoField> Expand(ProtoField protoField)
         {
-            if (protoField.Value is decimal[] or int[] or long[] or float[] or double[])
+            if (protoField.Value is int[] or long[] or float[] or double[] or decimal[])
                 return new[] { protoField };
 
             if (protoField is RepeatedProtoField repeatedProtoField)

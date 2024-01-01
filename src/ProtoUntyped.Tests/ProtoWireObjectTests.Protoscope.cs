@@ -172,15 +172,15 @@ public partial class ProtoWireObjectTests
         [Fact]
         public void ShouldGetProtoscopeStringForAllMessages()
         {
-            var assembly = typeof(SearchRequest).Assembly;
-            var messages = assembly.GetTypes()
-                                   .Where(x => Attribute.IsDefined(x, typeof(ProtoContractAttribute)) && !x.IsAbstract)
-                                   .Select(x => ThreadLocalFixture.Create(x));
+            var formatter = new StrictProtoscopeFormatter();
+            var messages = TestData.CreateTestMessages();
 
             foreach (var message in messages)
             {
                 var bytes = ProtoBufUtil.Serialize(message);
-                ProtoWireObject.Decode(bytes).ToProtoscopeString();
+                var wireObject = ProtoWireObject.Decode(bytes, TestData.GetDecodeOptions(message));
+                
+                wireObject.ToProtoscopeString(formatter);
             }
         }
     }

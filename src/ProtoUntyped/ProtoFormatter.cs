@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 
 namespace ProtoUntyped;
@@ -22,16 +21,18 @@ public class ProtoFormatter
     {
         var stringBuilder = new StringBuilder(1024);
         BuildString(stringBuilder, 0, fieldContainer);
+        stringBuilder.AppendLine();
 
         return stringBuilder.ToString();
     }
-    
+
     protected internal string BuildString(ProtoField protoMember)
     {
         var stringBuilder = new StringBuilder(1024);
-        
+
         stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "- {0} = ", protoMember.FieldNumber);
         BuildString(stringBuilder, _indentIncrement, protoMember.Value);
+        stringBuilder.AppendLine();
 
         return stringBuilder.ToString();
     }
@@ -40,76 +41,109 @@ public class ProtoFormatter
     {
         switch (value)
         {
+            case string:
+                FormatString(stringBuilder, indentSize, value);
+                break;
+
+            case byte[] array:
+                FormatByteArray(stringBuilder, indentSize, array);
+                break;
+
             case ProtoObject obj:
                 FormatProtoObject(stringBuilder, indentSize, obj.Fields);
                 break;
-                
-            case byte[] array:
-                FormatByteArray(stringBuilder, indentSize, array);
+
+            case int:
+                FormatNumericValue(stringBuilder, value);
+                break;
+
+            case long:
+                FormatNumericValue(stringBuilder, value);
+                break;
+
+            case float:
+                FormatNumericValue(stringBuilder, value);
+                break;
+
+            case double:
+                FormatNumericValue(stringBuilder, value);
+                break;
+
+            case int[] array:
+                FormatNumericArray(stringBuilder, indentSize, array);
+                break;
+
+            case long[] array:
+                FormatNumericArray(stringBuilder, indentSize, array);
                 break;
 
             case float[] array:
                 FormatNumericArray(stringBuilder, indentSize, array);
                 break;
-                
+
             case double[] array:
                 FormatNumericArray(stringBuilder, indentSize, array);
                 break;
-            
-            case int[] array:
-                FormatNumericArray(stringBuilder, indentSize, array);
-                break;
-                
-            case long[] array:
-                FormatNumericArray(stringBuilder, indentSize, array);
-                break;
 
-            case decimal[] array:
-                FormatNumericArray(stringBuilder, indentSize, array);
-                break;
-                    
-            case object[] array:
-                FormatObjectArray(stringBuilder, indentSize, array);
-                break;
-                
-            case string:
-            case Guid:
+            case decimal:
                 FormatString(stringBuilder, indentSize, value);
                 break;
-                
+
             case DateTime dateTime:
                 FormatDateTime(stringBuilder, indentSize, dateTime);
                 break;
-                    
+
             case TimeSpan timeSpan:
                 FormatTimeSpan(stringBuilder, indentSize, timeSpan);
                 break;
 
+            case Guid:
+                FormatString(stringBuilder, indentSize, value);
+                break;
+
+            // Repeated values
+
+            case decimal[] array:
+                FormatNumericArray(stringBuilder, indentSize, array);
+                break;
+
+            case IList array:
+                FormatArray(stringBuilder, indentSize, array);
+                break;
+
             default:
-                stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
-                stringBuilder.AppendLine();
+                FormatUnknownValue(stringBuilder, value);
                 break;
         }
     }
 
-    private void FormatObjectArray(StringBuilder stringBuilder, int indentSize, object[] array)
+    protected virtual void FormatNumericValue(StringBuilder stringBuilder, object value)
+    {
+        stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
+    }
+    
+    protected virtual void FormatUnknownValue(StringBuilder stringBuilder, object value)
+    {
+        stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
+    }
+
+    protected virtual void FormatArray(StringBuilder stringBuilder, int indentSize, IList array)
     {
         stringBuilder.AppendLine("array [");
-        foreach (var (item, index) in array.Select((item, index) => (item, index)))
+        foreach (var item in array)
         {
             stringBuilder.Append(' ', indentSize);
-            stringBuilder.AppendFormat("- {0} = ", index);
             BuildString(stringBuilder, indentSize + _indentIncrement, item);
+            stringBuilder.AppendLine();
         }
 
         stringBuilder.Append(' ', indentSize);
-        stringBuilder.AppendLine("]");
+        stringBuilder.Append("]");
     }
 
     protected virtual void FormatByteArray(StringBuilder stringBuilder, int indentSize, byte[] array)
     {
         stringBuilder.Append(Convert.ToBase64String(array));
-        stringBuilder.AppendLine();
     }
 
     protected virtual void FormatProtoObject(StringBuilder stringBuilder, int indentSize, IReadOnlyList<ProtoField> fields)
@@ -120,10 +154,11 @@ public class ProtoFormatter
             stringBuilder.Append(' ', indentSize);
             stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "- {0} = ", member.FieldNumber);
             BuildString(stringBuilder, indentSize + _indentIncrement, member.Value);
+            stringBuilder.AppendLine();
         }
 
         stringBuilder.Append(' ', indentSize);
-        stringBuilder.AppendLine("}");
+        stringBuilder.Append("}");
     }
 
     protected virtual void FormatNumericArray(StringBuilder stringBuilder, int indentSize, IList array)
@@ -134,28 +169,25 @@ public class ProtoFormatter
             if (index != 0)
                 stringBuilder.Append(" ");
 
-            stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", array[index]);   
+            FormatNumericValue(stringBuilder, array[index]);
         }
 
-        stringBuilder.AppendLine(" ]");
+        stringBuilder.Append(" ]");
     }
 
     protected virtual void FormatString(StringBuilder stringBuilder, int indentSize, object value)
     {
         stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\"{0}\"", value);
-        stringBuilder.AppendLine();
     }
 
     protected virtual void FormatDateTime(StringBuilder stringBuilder, int indentSize, DateTime dateTime)
     {
         stringBuilder.AppendFormat(CultureInfo.InvariantCulture, GetDefaultFormat(dateTime), dateTime);
-        stringBuilder.AppendLine();
     }
 
     protected virtual void FormatTimeSpan(StringBuilder stringBuilder, int indentSize, TimeSpan timeSpan)
     {
         stringBuilder.AppendFormat(CultureInfo.InvariantCulture, GetDefaultFormat(timeSpan), timeSpan);
-        stringBuilder.AppendLine();
     }
 
     public static string GetDefaultFormat(DateTime dateTime)
