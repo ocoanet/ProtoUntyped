@@ -71,68 +71,47 @@ internal static class ProtoDecoder
         return (chunk & 0xF0) == 0;
     }
 
-#if NETSTANDARD2_1
-    public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, [NotNullWhen(true)] out ProtoObject? protoObject)
-#else
-    public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions options, out ProtoObject? protoObject)
-#endif
-    {
-        if (ProtoWireDecoder.TryDecode(data, options, out var wireObject))
-        {
-            protoObject = Decode(wireObject!, options);
-            return true;
-        }
-
-        protoObject = default;
-        return false;
-    }
-
     public static ProtoObject Decode(ProtoWireObject wireObject, ProtoDecodeOptions decodeOptions)
     {
-        return new ProtoObject(ConvertWireFields(wireObject.Fields, decodeOptions));
+        return new ProtoObject(DecodeFields(wireObject.Fields, decodeOptions));
     }
 
-    private static List<ProtoField> ConvertWireFields(IReadOnlyList<ProtoWireField> wireFields, ProtoDecodeOptions decodeOptions)
+    private static List<ProtoField> DecodeFields(IReadOnlyList<ProtoWireField> wireFields, ProtoDecodeOptions decodeOptions)
     {
-        var fields = wireFields.Select(x => ConvertWireField(x, decodeOptions)).ToList();
+        var fields = wireFields.Select(x => DecodeField(x, decodeOptions)).ToList();
         var groupedFields = GroupRepeatedFields(fields);
-        
+
         return groupedFields;
     }
 
-    private static ProtoField ConvertWireField(ProtoWireField wireField, ProtoDecodeOptions decodeOptions)
+    private static ProtoField DecodeField(ProtoWireField wireField, ProtoDecodeOptions decodeOptions)
     {
         switch (wireField.Value.Type)
         {
             case ProtoWireValueType.String:
-                return CreateField(wireField, wireField.Value.StringValue);
+                return new ProtoField(wireField.FieldNumber, wireField.WireType, wireField.Value.StringValue, wireField.PackedWireType);
 
             case ProtoWireValueType.Bytes:
-                return CreateField(wireField, wireField.Value.BytesValue);
+                return new ProtoField(wireField.FieldNumber, wireField.WireType, wireField.Value.BytesValue, wireField.PackedWireType);
 
             case ProtoWireValueType.Message:
-                return CreateField(wireField, DecodeMessageValue(wireField, decodeOptions));
+                return DecodeMessageField(wireField, decodeOptions);
 
             case ProtoWireValueType.Int32:
-                return CreateField(wireField, DecodeInt32Value(wireField, decodeOptions));
+                return DecodeInt32Field(wireField, decodeOptions);
 
             case ProtoWireValueType.Int64:
-                return CreateField(wireField, DecodeInt64Value(wireField, decodeOptions));
-            
+                return DecodeInt64Value(wireField, decodeOptions);
+
             case ProtoWireValueType.Int32Array:
-                return CreateField(wireField, wireField.Value.Int32Value);
-            
+                return new ProtoField(wireField.FieldNumber, wireField.WireType, wireField.Value.Int32ArrayValue, wireField.PackedWireType);
+
             case ProtoWireValueType.Int64Array:
-                return CreateField(wireField, wireField.Value.Int64Value);
+                return new ProtoField(wireField.FieldNumber, wireField.WireType, wireField.Value.Int64ArrayValue, wireField.PackedWireType);
 
             default:
                 throw new NotSupportedException($"Unknown value type {wireField.Value.Type}");
         }
-    }
-
-    private static ProtoField CreateField(ProtoWireField wireField, object value)
-    {
-        return new ProtoField(wireField.FieldNumber, wireField.WireType, value, wireField.PackedWireType);
     }
 
     private static List<ProtoField> GroupRepeatedFields(IReadOnlyList<ProtoField> fields)
@@ -141,43 +120,44 @@ internal static class ProtoDecoder
                      .Select(g => g.Count() == 1 ? g.Single() : new RepeatedProtoField(g.Key, g.ToArray()))
                      .ToList();
     }
-    
-    private static object DecodeMessageValue(ProtoWireField wireField, ProtoDecodeOptions decodeOptions)
+
+    private static ProtoField DecodeMessageField(ProtoWireField wireField, ProtoDecodeOptions decodeOptions)
     {
         var messageFields = wireField.Value.MessageValue.Fields;
-        
+
         if (decodeOptions.DecodeGuid && GuidDecoder.TryParseGuid(messageFields, decodeOptions) is { } guid)
-            return guid;
+            return new ProtoField(wireField.FieldNumber, wireField.WireType, guid, wireField.PackedWireType);
 
         if (decodeOptions.DecodeDateTime && TimeDecoder.TryParseDateTime(messageFields, decodeOptions) is { } dateTime)
-            return dateTime;
+            return new ProtoField(wireField.FieldNumber, wireField.WireType, dateTime, wireField.PackedWireType);
 
         if (decodeOptions.DecodeTimeSpan && TimeDecoder.TryParseTimeSpan(messageFields, decodeOptions) is { } timeSpan)
-            return timeSpan;
+            return new ProtoField(wireField.FieldNumber, wireField.WireType, timeSpan, wireField.PackedWireType);
 
         if (decodeOptions.DecodeDecimal && DecimalDecoder.TryParseDecimal(messageFields, decodeOptions) is { } dec)
-            return dec;
+            return new ProtoField(wireField.FieldNumber, wireField.WireType, dec, wireField.PackedWireType);
 
-        return new ProtoObject(ConvertWireFields(messageFields, decodeOptions));
+        var protoObject = new ProtoObject(DecodeFields(messageFields, decodeOptions));
+        return new ProtoField(wireField.FieldNumber, wireField.WireType, protoObject, wireField.PackedWireType);
     }
-    
-    private static object DecodeInt32Value(ProtoWireField wireField, ProtoDecodeOptions decodeOptions)
+
+    private static ProtoField DecodeInt32Field(ProtoWireField wireField, ProtoDecodeOptions decodeOptions)
     {
         var value = wireField.Value.Int32Value;
 
         if (wireField.WireType == WireType.Fixed32 && decodeOptions.Fixed32DecodingMode == FixedWireTypeDecodingMode.FloatingPoint)
-            return Unsafe.As<int, float>(ref value);
+            return new ProtoField(wireField.FieldNumber, wireField.WireType, Unsafe.As<int, float>(ref value), wireField.PackedWireType);
 
-        return value;
+        return new ProtoField(wireField.FieldNumber, wireField.WireType, value, wireField.PackedWireType);
     }
-    
-    private static object DecodeInt64Value(ProtoWireField wireField, ProtoDecodeOptions decodeOptions)
+
+    private static ProtoField DecodeInt64Value(ProtoWireField wireField, ProtoDecodeOptions decodeOptions)
     {
         var value = wireField.Value.Int64Value;
 
         if (wireField.WireType == WireType.Fixed64 && decodeOptions.Fixed64DecodingMode == FixedWireTypeDecodingMode.FloatingPoint)
-            return Unsafe.As<long, double>(ref value);
+            return new ProtoField(wireField.FieldNumber, wireField.WireType, Unsafe.As<long, double>(ref value), wireField.PackedWireType);
 
-        return value;
+        return new ProtoField(wireField.FieldNumber, wireField.WireType, value, wireField.PackedWireType);
     }
 }

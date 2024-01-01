@@ -27,6 +27,16 @@ internal static class GuidDecoder
         return isValid ? guidAccessor.Guid : null;
     }
 
+    public static ProtoWireObject EncodeGuid(Guid value)
+    {
+        var guidAccessor = new GuidAccessor(value);
+
+        return new ProtoWireObject(
+            new(1, (long)guidAccessor.Low, WireType.Fixed64),
+            new(2, (long)guidAccessor.High, WireType.Fixed64)
+        );
+    }
+
     [StructLayout(LayoutKind.Explicit)]
     private readonly struct GuidAccessor
     {
@@ -53,6 +63,14 @@ internal static class GuidDecoder
             VersionByte = default;
             Low = low;
             High = high;
+        }
+
+        public GuidAccessor(Guid guid)
+        {
+            Low = default;
+            High = default;
+            VersionByte = default;
+            Guid = guid;
         }
     }
 }

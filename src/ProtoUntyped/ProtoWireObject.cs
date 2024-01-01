@@ -46,7 +46,7 @@ public class ProtoWireObject
         if (TryDecode(data, decodeOptions, out var protoObject))
             return protoObject!;
 
-        throw new ArgumentException("Unable to parse object from wire format");
+        throw new ArgumentException("Unable to parse wire object");
     }
     
 #if NETSTANDARD2_1

@@ -16,10 +16,28 @@ public class RepeatedProtoField : ProtoField
         Fields = fields;
     }
     
-    public RepeatedProtoField(int fieldNumber, WireType wireType, Array values)
+    public RepeatedProtoField(int fieldNumber, WireType wireType, string[] values)
         : base(fieldNumber, wireType, values)
     {
-        Fields = values.Cast<object>().Select(x => new ProtoField(fieldNumber, wireType, x)).ToArray();
+        Fields = values.Select(x => new ProtoField(fieldNumber, wireType, x)).ToArray();
+    }
+    
+    public RepeatedProtoField(int fieldNumber, WireType wireType, int[] values)
+        : base(fieldNumber, wireType, values)
+    {
+        Fields = values.Select(x => new ProtoField(fieldNumber, wireType, x)).ToArray();
+    }
+    
+    public RepeatedProtoField(int fieldNumber, WireType wireType, long[] values)
+        : base(fieldNumber, wireType, values)
+    {
+        Fields = values.Select(x => new ProtoField(fieldNumber, wireType, x)).ToArray();
+    }
+    
+    public RepeatedProtoField(int fieldNumber, WireType wireType, ProtoObject[] values)
+        : base(fieldNumber, wireType, values)
+    {
+        Fields = values.Select(x => new ProtoField(fieldNumber, wireType, x)).ToArray();
     }
 
     internal RepeatedProtoField(int fieldNumber, ProtoField[] fields)
@@ -39,11 +57,6 @@ public class RepeatedProtoField : ProtoField
     {
         return formatter.BuildString(this);
     }
-
-    public override IEnumerable<object> GetValues()
-    {
-        return Fields.Select(x => x.Value);
-    }
     
     private static int GetFieldNumber(ProtoField[] fields)
     {
@@ -61,7 +74,7 @@ public class RepeatedProtoField : ProtoField
         return fieldNumber;
     }
 
-    private static object ComputeValue(ProtoField[] fields)
+    private static Array ComputeValue(ProtoField[] fields)
     {
         var types = fields.Select(x => x.Value.GetType()).Distinct().ToList();
         var value = types.Count == 1 ? Array.CreateInstance(types[0], fields.Length) : new object[fields.Length];

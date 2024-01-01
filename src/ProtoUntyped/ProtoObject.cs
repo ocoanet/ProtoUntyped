@@ -1,7 +1,9 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using ProtoUntyped.Decoders;
 
@@ -48,7 +50,7 @@ public class ProtoObject
 
         if (recursive)
         {
-            foreach (var protoObject in _fields.SelectMany(x => x.GetValues()).OfType<ProtoObject>())
+            foreach (var protoObject in GetNormalizedFields().Select(x => x.Value).OfType<ProtoObject>())
             {
                 protoObject.SortFields(true);
             }
@@ -125,11 +127,60 @@ public class ProtoObject
     public static bool TryDecode(ReadOnlyMemory<byte> data, ProtoDecodeOptions decodeOptions, out ProtoObject? protoObject)
 #endif
     {
-        return ProtoDecoder.TryDecode(data, decodeOptions, out protoObject);
+        if (ProtoWireDecoder.TryDecode(data, decodeOptions, out var wireObject))
+        {
+            protoObject = ProtoDecoder.Decode(wireObject!, decodeOptions);
+            return true;
+        }
+
+        protoObject = null;
+        return false;
     }
 
     public static ProtoObject Decode(ProtoWireObject wireObject, ProtoDecodeOptions decodeOptions)
     {
         return ProtoDecoder.Decode(wireObject, decodeOptions);
+    }
+
+    public ProtoWireObject ToProtoWireObject()
+    {
+        return ProtoEncoder.Encode(this);
+    }
+    
+    public void EncodeTo(Stream stream)
+    {
+        ToProtoWireObject().EncodeTo(stream);
+    }
+    
+    public void EncodeTo(IBufferWriter<byte> bufferWriter)
+    {
+        ToProtoWireObject().EncodeTo(bufferWriter);
+    }
+
+    public Span<byte> Encode()
+    {
+        return ToProtoWireObject().Encode();
+    }
+
+    public bool CanBeEncoded()
+    {
+        return ProtoEncoder.TryEncode(this, out var protoWireObject) && protoWireObject.CanBeEncoded();
+    }
+
+    /// <summary>
+    /// Gets the list of fields without repeated fields.
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<ProtoField> GetNormalizedFields()
+    {
+        return Fields.SelectMany(Normalize);
+
+        IEnumerable<ProtoField> Normalize(ProtoField protoField)
+        {
+            if (protoField is RepeatedProtoField repeatedProtoField)
+                return repeatedProtoField.Fields;
+
+            return new[] { protoField };
+        }
     }
 }

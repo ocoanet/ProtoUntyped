@@ -8,6 +8,32 @@ namespace ProtoUntyped.Decoders;
 internal static class TimeDecoder
 {
     private static readonly DateTime _epoch = new DateTime(1970, 1, 1);
+    
+    public static ProtoWireObject EncodeDateTime(DateTime value)
+    {
+        return EncodeScaledTicks(ScaledTicks.Create(value));
+    }
+    
+    public static ProtoWireObject EncodeTimeSpan(TimeSpan value)
+    {
+        return EncodeScaledTicks(ScaledTicks.Create(value));
+    }
+    
+    private static ProtoWireObject EncodeScaledTicks(ScaledTicks value)
+    {
+        var fields = new List<ProtoWireField>();
+        
+        if (value.Value != default)
+            fields.Add(new ProtoWireField(1, value.Value, WireType.SignedVarint));
+        
+        if (value.Scale != default)
+            fields.Add(new ProtoWireField(2, (int)value.Scale, WireType.Varint));
+        
+        if (value.Kind != default)
+            fields.Add(new ProtoWireField(3, (int)value.Kind, WireType.Varint));
+
+        return new ProtoWireObject(fields);
+    }
 
     public static DateTime? TryParseDateTime(IReadOnlyList<ProtoWireField> fields, ProtoDecodeOptions options)
     {
@@ -83,7 +109,6 @@ internal static class TimeDecoder
         Seconds = 3,
         Milliseconds = 4,
         Ticks = 5,
-
         MinMax = 15
     }
 
@@ -92,6 +117,13 @@ internal static class TimeDecoder
         public long Value;
         public TimeSpanScale Scale;
         public DateTimeKind Kind;
+
+        public ScaledTicks(long value, TimeSpanScale scale, DateTimeKind kind)
+        {
+            Value = value;
+            Scale = scale;
+            Kind = kind;
+        }
 
         public DateTime? ToDateTime()
         {
@@ -125,6 +157,54 @@ internal static class TimeDecoder
                 (TimeSpanScale.MinMax, -1)      => TimeSpan.MinValue,
                 _                               => null,
             };
+        }
+        
+        public static ScaledTicks Create(DateTime dateTime)
+        {
+            if (dateTime == DateTime.MinValue)
+                return new ScaledTicks(-1, TimeSpanScale.MinMax, DateTimeKind.Unspecified);
+            
+            if (dateTime == DateTime.MaxValue)
+                return new ScaledTicks(1, TimeSpanScale.MinMax, DateTimeKind.Unspecified);
+
+            var kind = dateTime.Kind;
+            var timeSpan = dateTime - DateTime.SpecifyKind(_epoch, kind);
+            var (value, scale) = ComputeValueAndScale(timeSpan);
+            
+            return new ScaledTicks(value, scale, kind);
+        }
+        
+        public static ScaledTicks Create(TimeSpan timeSpan)
+        {
+            var (value, scale) = ComputeValueAndScale(timeSpan);
+            
+            return new ScaledTicks(value, scale, DateTimeKind.Unspecified);
+        }
+
+        public static (long value, TimeSpanScale scale) ComputeValueAndScale(TimeSpan timeSpan)
+        {
+            if (timeSpan == TimeSpan.MaxValue)
+                return (1, TimeSpanScale.MinMax);
+
+            if (timeSpan == TimeSpan.MinValue)
+                return (-1, TimeSpanScale.MinMax);
+
+            if (timeSpan.Ticks % TimeSpan.TicksPerDay == 0)
+                return (timeSpan.Ticks / TimeSpan.TicksPerDay, TimeSpanScale.Days);
+
+            if (timeSpan.Ticks % TimeSpan.TicksPerHour == 0)
+                return (timeSpan.Ticks / TimeSpan.TicksPerHour, TimeSpanScale.Hours);
+
+            if (timeSpan.Ticks % TimeSpan.TicksPerMinute == 0)
+                return (timeSpan.Ticks / TimeSpan.TicksPerMinute, TimeSpanScale.Minutes);
+
+            if (timeSpan.Ticks % TimeSpan.TicksPerSecond == 0)
+                return (timeSpan.Ticks / TimeSpan.TicksPerSecond, TimeSpanScale.Seconds);
+
+            if (timeSpan.Ticks % TimeSpan.TicksPerMillisecond == 0)
+                return (timeSpan.Ticks / TimeSpan.TicksPerMillisecond, TimeSpanScale.Milliseconds);
+
+            return (timeSpan.Ticks, TimeSpanScale.Ticks);
         }
     }
 }

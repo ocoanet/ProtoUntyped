@@ -149,30 +149,7 @@ public partial class ProtoWireObjectTests
 
         public static IEnumerable<object[]> CreateMessagesData()
         {
-            foreach (var messageType in typeof(MessageWithArrays).Assembly.GetTypes().Where(x => Attribute.IsDefined(x, typeof(ProtoContractAttribute))))
-            {
-                yield return new object[] { ThreadLocalFixture.Create(messageType) };
-            }
-        }
-
-        [ProtoContract]
-        public class TestMessage
-        {
-            [ProtoMember(1)] public int Id { get; set; }
-
-            [ProtoMember(2)] public string Name { get; set; }
-
-            [ProtoMember(3)] public decimal Amount { get; set; }
-
-            [ProtoMember(4)] public TestNestedMessage NestedMessage { get; set; }
-        }
-
-        [ProtoContract]
-        public class TestNestedMessage
-        {
-            [ProtoMember(1)] public string Key { get; set; }
-
-            [ProtoMember(2)] public List<decimal> Values { get; set; }
+            return TestData.CreateTestMessages().Select(x => new[] { x });
         }
     }
 }

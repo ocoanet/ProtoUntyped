@@ -55,6 +55,10 @@ public class ProtoFormatter
             case double[] array:
                 FormatNumericArray(stringBuilder, indentSize, array);
                 break;
+            
+            case int[] array:
+                FormatNumericArray(stringBuilder, indentSize, array);
+                break;
                 
             case long[] array:
                 FormatNumericArray(stringBuilder, indentSize, array);
