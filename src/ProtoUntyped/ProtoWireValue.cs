@@ -12,8 +12,8 @@ public readonly struct ProtoWireValue
     [FieldOffset(0)] private readonly string? _stringValue;
     [FieldOffset(0)] private readonly byte[]? _bytesValue;
     [FieldOffset(0)] private readonly ProtoWireObject? _message;
-    [FieldOffset(0)] private readonly int[] _int32ArrayValue;
-    [FieldOffset(0)] private readonly long[] _int64ArrayValue;
+    [FieldOffset(0)] private readonly int[]? _int32ArrayValue;
+    [FieldOffset(0)] private readonly long[]? _int64ArrayValue;
     [FieldOffset(8)] private readonly int _int32Value;
     [FieldOffset(8)] private readonly long _int64Value;
     [FieldOffset(16)] private readonly ProtoWireValueType _type;
@@ -68,9 +68,9 @@ public readonly struct ProtoWireValue
     
     public ProtoWireObject MessageValue => _type == ProtoWireValueType.Message ? _message! : ProtoWireObject.Empty;
     
-    public int[] Int32ArrayValue => _type == ProtoWireValueType.Int32Array ? _int32ArrayValue : Array.Empty<int>();
+    public int[] Int32ArrayValue => _type == ProtoWireValueType.Int32Array ? _int32ArrayValue! : Array.Empty<int>();
     
-    public long[] Int64ArrayValue => _type == ProtoWireValueType.Int64Array ? _int64ArrayValue : Array.Empty<long>();
+    public long[] Int64ArrayValue => _type == ProtoWireValueType.Int64Array ? _int64ArrayValue! : Array.Empty<long>();
 
     public int Int32Value => _type == ProtoWireValueType.Int32 ? _int32Value : default;
 
