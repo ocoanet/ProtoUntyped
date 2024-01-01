@@ -120,7 +120,7 @@ Type 0 can be used for `int32, int64, uint32, uint64, sint32, sint64, bool, enum
 Type 1 can be used for `fixed64, sfixed64, double`. Because protobuf-net uses type 0 for integers by default, ProtoUntyped interprets type 1 as `System.Double` by default, but it can be configured using `ProtoDecodeOptions.Fixed64DecodingMode`.
 
 ### Wire type 2 (length-delimited)
-Type 2 can be used for `string, bytes, embedded messages, packed repeated fields`. ProtoUntyped will try to interpret the data as an embedded message. If the decoding fails, the data will be interpreted as a `System.String`. It can be configured using `ProtoDecodeOptions.DefaultPreferredStringDecodingModes`.
+Type 2 can be used for `string, bytes, embedded messages, packed repeated fields`. ProtoUntyped will try to interpret the data as an embedded message. If the decoding fails, the data will be interpreted as a `System.String`. It can be configured using `ProtoDecodeOptions.PreferredStringDecodingModes`.
 
 ### Wire type 5 (32-bit)
 Type 5 can be used for `fixed32, sfixed32, float`. Because protobuf-net uses type 0 for integers by default, ProtoUntyped interprets type 5 as `System.Float` by default, but it can be configured using `ProtoDecodeOptions.Fixed32DecodingMode`.
