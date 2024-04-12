@@ -78,7 +78,7 @@ ProtoUntyped does not decode the BCL types by default but it can be activated us
 
 ## ProtoWireObject
 
-`ProtoWireObject` is low-level an alternative to `ProtoObject`. Here are the differences between the two types:
+`ProtoWireObject` is a low-level alternative to `ProtoObject`. Here are the differences between the two types:
 
 | Type | Decodes LEN fields | Converts fixed types to floats | Groups repeated fields | Decodes BCL types |
 | --- | :---: | :---: | :---: | :---: |
@@ -114,7 +114,7 @@ you should generate protoscope strings from `ProtoWireObject` if you need strict
 The protocol buffer wire format contains a sequence of fields. Every field contains the **field number**, the **wire type**, and the **field value**. The field numbers and the wire types can be safely read, so you will always get a valid list of top level field meta-data. Then ProtoUntyped uses heuristics to decode the field values depending on the wire type.
 
 ### Wire type 0 (Varint)
-Type 0 can be used for `int32, int64, uint32, uint64, sint32, sint64, bool, enum`. The size does not really matter for decoding, but it is required to know if the value is signed. ProtoUntyped always decode type 0 as signed.
+Type 0 can be used for `int32, int64, uint32, uint64, sint32, sint64, bool, enum`. The size does not really matter for decoding, but it is required to know if the value is signed. ProtoUntyped always decodes type 0 as signed.
 
 ### Wire type 1 (64-bit)
 Type 1 can be used for `fixed64, sfixed64, double`. Because protobuf-net uses type 0 for integers by default, ProtoUntyped interprets type 1 as `System.Double` by default, but it can be configured using `ProtoDecodeOptions.Fixed64DecodingMode`.
